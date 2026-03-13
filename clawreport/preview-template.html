@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>[OWNER] — ClawDiary</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=JetBrains+Mono:wght@100..800&family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #050507; --surface: #0D0D10; --surface-alt: #141418;
+      --border: #232328; --border-bright: #38383F;
+      --primary: #FF6B35; --primary-dim: rgba(255,107,53,0.08); --primary-border: rgba(255,107,53,0.15);
+      --secondary: #56D4DD; --accent-gold: #D4A843; --accent-purple: #B48EF0; --accent-blue: #5B8DEF;
+      --text: #EEEEF0; --text-secondary: #A0A0A8; --text-muted: #68686F; --text-dim: #404048;
+      --font-sans: "Inter", system-ui, sans-serif; --font-mono: "JetBrains Mono", monospace; --font-serif: "Newsreader", Georgia, serif;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: var(--bg); color: var(--text); font-family: var(--font-sans); font-size: 16px; line-height: 1.65; -webkit-font-smoothing: antialiased; }
+    .container { max-width: 700px; margin: 0 auto; padding: 0 24px; }
+    .label { font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.18em; font-weight: 500; }
+    .mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+    section { margin-top: 140px; }
+    .section-header { display: flex; justify-content: space-between; align-items: baseline; padding-bottom: 16px; border-bottom: 1px solid var(--border); margin-bottom: 56px; }
+    .section-header .label { font-size: 11px; }
+    .section-number { font-family: var(--font-mono); font-size: 11px; color: var(--text-dim); }
+
+    /* === Hero === */
+    .hero { margin-top: 80px; padding-top: 40px; }
+    .hero-eyebrow { font-family: var(--font-mono); font-size: 12px; color: var(--primary); letter-spacing: 0.12em; margin-bottom: 24px; font-weight: 500; }
+    .hero-duo { margin-bottom: 32px; display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+    .hero-owner { font-size: 28px; font-weight: 800; letter-spacing: -0.02em; }
+    .hero-x { font-size: 20px; color: var(--text-dim); font-weight: 300; }
+    .hero-agent { font-size: 22px; font-weight: 600; color: var(--text-secondary); }
+    .hero h1 { font-size: clamp(44px, 9vw, 64px); font-weight: 800; letter-spacing: -0.035em; line-height: 1.05; margin-bottom: 24px; }
+    .hero-tagline { font-size: 19px; color: var(--text-secondary); line-height: 1.55; max-width: 580px; font-weight: 400; }
+    .hero-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--border); margin-top: 64px; border: 1px solid var(--border); }
+    .stat-cell { background: var(--bg); padding: 28px 20px; text-align: center; }
+    .stat-value { font-size: 36px; font-weight: 700; font-family: var(--font-mono); line-height: 1; margin-bottom: 8px; }
+    .stat-label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.12em; font-family: var(--font-mono); }
+    .hero-role { font-size: 15px; font-weight: 600; color: var(--text-secondary); margin-top: 24px; }
+    .hero-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 16px; }
+    .hero-tag { font-family: var(--font-mono); font-size: 10px; color: var(--secondary); letter-spacing: 0.06em; padding: 3px 8px; border: 1px solid rgba(86,212,221,0.15); background: rgba(86,212,221,0.04); }
+
+    /* === v1 Identity Card === */
+    .id-card { margin-top: 48px; }
+    .id-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 12px; flex-wrap: wrap; gap: 8px; }
+    .id-role { font-size: 15px; font-weight: 600; color: var(--text-secondary); }
+    .id-loc { font-family: var(--font-mono); font-size: 12px; color: var(--text-muted); }
+    .id-bio { font-size: 16px; color: var(--text); line-height: 1.65; margin-bottom: 20px; }
+    .id-career { display: flex; gap: 24px; margin-bottom: 20px; flex-wrap: wrap; }
+    .id-career-item { font-size: 13px; color: var(--text-muted); }
+    .id-career-item strong { color: var(--text-secondary); font-weight: 600; }
+    .id-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 20px; }
+    .id-tag { font-family: var(--font-mono); font-size: 10px; color: var(--secondary); letter-spacing: 0.06em; padding: 3px 8px; border: 1px solid rgba(86,212,221,0.15); background: rgba(86,212,221,0.04); }
+    .id-projects-row { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 16px; }
+    .id-proj { font-size: 13px; padding: 8px 12px; background: var(--surface); border: 1px solid var(--border); }
+    .id-proj-name { font-weight: 600; color: var(--text); font-size: 13px; }
+    .id-proj-desc { color: var(--text-muted); font-size: 11px; font-family: var(--font-mono); }
+    .id-goal { font-size: 13px; color: var(--text-muted); font-style: italic; }
+
+    /* === v1 Skill Footprint === */
+    .sf-summary { font-family: var(--font-mono); font-size: 14px; color: var(--text-muted); margin-bottom: 32px; }
+    .sf-grid { display: grid; gap: 16px; }
+    .sf-item { display: flex; align-items: flex-start; gap: 16px; padding: 20px; background: var(--surface); border: 1px solid var(--border); }
+    .sf-icon { font-size: 18px; flex-shrink: 0; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; }
+    .sf-content { flex: 1; }
+    .sf-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
+    .sf-name { font-size: 16px; font-weight: 700; }
+    .sf-name.featured { color: var(--accent-gold); }
+    .sf-count { font-family: var(--font-mono); font-size: 14px; color: var(--primary); font-weight: 600; }
+    .sf-highlight { font-size: 13px; color: var(--text-muted); line-height: 1.5; }
+    .sf-powered { margin-top: 24px; padding: 16px 20px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; font-family: var(--font-mono); font-size: 12px; color: var(--text-muted); }
+    .sf-badge { color: var(--primary); font-weight: 600; }
+
+    /* === v1 Effort Map === */
+    .effort-commentary { font-size: 18px; color: var(--text-secondary); line-height: 1.7; margin-bottom: 32px; }
+    .effort-highlight { padding: 20px 24px; background: var(--surface); border-left: 3px solid var(--secondary); font-size: 15px; color: var(--text-secondary); line-height: 1.6; }
+    .effort-days { display: flex; gap: 3px; margin-bottom: 32px; align-items: flex-end; height: 40px; }
+    .effort-day { flex: 1; background: var(--surface); border-radius: 2px; min-height: 4px; }
+    .effort-day.peak { background: var(--primary); height: 100%; }
+    .effort-day.high { background: rgba(255,107,53,0.7); height: 75%; }
+    .effort-day.medium { background: rgba(255,107,53,0.5); height: 50%; }
+    .effort-day.low { background: rgba(255,107,53,0.25); height: 25%; }
+
+    /* === Showcase === */
+    .showcase-item { margin-bottom: 72px; }
+    .showcase-meta { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+    .showcase-index { font-family: var(--font-mono); font-size: 12px; color: var(--text-dim); }
+    .showcase-domain { font-family: var(--font-mono); font-size: 10px; color: var(--primary); letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600; }
+    .showcase-title { font-size: 28px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.15; margin-bottom: 12px; }
+    .showcase-what { font-size: 16px; color: var(--text-secondary); margin-bottom: 20px; line-height: 1.6; }
+    .showcase-sowhat { background: var(--primary-dim); border-left: 3px solid var(--primary); padding: 20px 24px; font-size: 16px; font-weight: 600; color: var(--text); line-height: 1.55; margin-bottom: 16px; }
+    .showcase-evidence { font-size: 14px; color: var(--text-muted); font-style: italic; padding-left: 16px; border-left: 1px solid var(--border); }
+    .showcase-impact { font-family: var(--font-mono); font-size: 9px; text-transform: uppercase; letter-spacing: 0.1em; padding: 2px 6px; border: 1px solid var(--border); color: var(--text-muted); margin-left: 12px; }
+    .showcase-impact.paradigm { border-color: var(--accent-gold); color: var(--accent-gold); }
+    .showcase-impact.invention { border-color: var(--accent-purple); color: var(--accent-purple); }
+    .showcase-impact.mastery { border-color: var(--secondary); color: var(--secondary); }
+    .showcase-impact.craft { border-color: var(--text-muted); color: var(--text-muted); }
+
+    /* === v1 Portrait (thinking, taste, pyramid, dimensions) === */
+    .thinking-block { background: var(--surface); border: 1px solid var(--border); padding: 40px; margin-bottom: 48px; }
+    .thinking-primary { font-size: 28px; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 8px; }
+    .thinking-desc { font-size: 16px; color: var(--text-secondary); margin-bottom: 32px; }
+    .anchor-section { padding-top: 28px; border-top: 1px solid var(--border); }
+    .anchor-names { font-size: 22px; font-weight: 700; margin-bottom: 12px; }
+    .anchor-names .divider { color: var(--text-dim); margin: 0 8px; font-weight: 400; }
+    .anchor-reason { font-size: 15px; color: var(--text-secondary); line-height: 1.65; }
+    .anchor-contrast { margin-top: 20px; padding: 16px 20px; background: rgba(255,107,53,0.04); border: 1px solid var(--primary-border); font-size: 14px; color: var(--text-secondary); line-height: 1.6; }
+
+    .pyramid-wrap { margin-bottom: 56px; }
+    .pyramid { display: flex; flex-direction: column-reverse; gap: 3px; }
+    .pyramid-level { display: flex; justify-content: space-between; align-items: center; padding: 11px 20px; background: var(--surface); font-family: var(--font-mono); font-size: 12px; color: var(--text-muted); }
+    .pyramid-level.active { background: var(--primary); color: #000; font-weight: 700; }
+    .pyramid-level .pct { opacity: 0.6; }
+    .pyramid-level.active .pct { opacity: 0.7; }
+    .pyramid-evidence { margin-top: 20px; font-size: 14px; color: var(--text-muted); font-style: italic; line-height: 1.6; }
+
+    /* === Dimensions (shared v1 + v2 portrait) === */
+    .dim-card { border-bottom: 1px solid var(--border); padding: 36px 0; }
+    .dim-card:first-child { padding-top: 0; }
+    .dim-card:last-child { border-bottom: none; }
+    .dim-type-tag { font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 12px; display: inline-block; }
+    .dim-type-tag.capability { color: var(--secondary); }
+    .dim-type-tag.style { color: var(--accent-purple); }
+    .dim-title { font-size: 20px; font-weight: 700; margin-bottom: 16px; letter-spacing: -0.01em; }
+    .dim-observation { font-size: 15px; color: var(--text-secondary); line-height: 1.65; margin-bottom: 16px; }
+    .dim-evidence { font-size: 14px; color: var(--text-muted); font-style: italic; margin-bottom: 12px; }
+    .dim-metric { font-family: var(--font-mono); font-size: 13px; color: var(--primary); font-weight: 600; margin-bottom: 16px; }
+    .dim-claw { margin-top: 16px; padding: 16px 20px; background: var(--surface); font-size: 14px; color: var(--text-secondary); line-height: 1.6; display: flex; gap: 12px; }
+    .dim-claw .paw { flex-shrink: 0; font-size: 14px; opacity: 0.5; }
+
+    /* === Catchphrases === */
+    .cp-item { padding: 28px 0; border-bottom: 1px solid var(--border); }
+    .cp-item:last-child { border-bottom: none; }
+    .cp-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 12px; }
+    .cp-phrase { font-size: 22px; font-weight: 700; letter-spacing: -0.01em; }
+    .cp-freq { font-family: var(--font-mono); font-size: 16px; font-weight: 600; color: var(--primary); }
+    .cp-vibe { font-family: var(--font-mono); font-size: 11px; color: var(--text-dim); margin-bottom: 8px; }
+    .cp-interpretation { font-size: 14px; color: var(--text-secondary); line-height: 1.6; }
+
+    /* === Diary === */
+    .diary-item { padding: 28px 0; border-bottom: 1px solid var(--border); }
+    .diary-item:last-child { border-bottom: none; }
+    .diary-item:hover .diary-title { color: var(--text); }
+    .diary-meta { display: flex; gap: 12px; align-items: center; margin-bottom: 8px; }
+    .diary-date { font-family: var(--font-mono); font-size: 12px; color: var(--text-muted); }
+    .diary-type { font-family: var(--font-mono); font-size: 9px; text-transform: uppercase; letter-spacing: 0.1em; padding: 2px 6px; border: 1px solid var(--border); color: var(--text-muted); }
+    .diary-type.breakthrough { border-color: var(--primary-border); color: var(--primary); }
+    .diary-type.milestone { border-color: rgba(86,212,221,0.2); color: var(--secondary); }
+    .diary-type.philosophy { border-color: rgba(180,142,240,0.2); color: var(--accent-purple); }
+    .diary-type.relationship { border-color: rgba(180,142,240,0.2); color: var(--accent-purple); }
+    .diary-type.struggle { border-color: rgba(255,107,53,0.2); color: var(--primary); }
+    .diary-type.comedy { border-color: rgba(212,168,67,0.2); color: var(--accent-gold); }
+    .diary-title { font-size: 18px; font-weight: 600; margin-bottom: 8px; color: var(--text-secondary); transition: color 0.15s; }
+    .diary-entry { font-size: 15px; color: var(--text-muted); line-height: 1.6; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; transition: all 0.3s ease; }
+    .diary-item:hover .diary-entry { -webkit-line-clamp: unset; color: var(--text-secondary); }
+    .diary-expand { font-family: var(--font-mono); font-size: 10px; color: var(--text-dim); margin-top: 8px; transition: opacity 0.2s; }
+    .diary-item:hover .diary-expand { opacity: 0; }
+    .diary-item.comedy-entry { border-left: 3px solid var(--accent-gold); padding-left: 20px; }
+
+    /* === Achievements === */
+    .achievements-grid { display: grid; gap: 12px; }
+    .ach-item { display: flex; align-items: flex-start; gap: 16px; padding: 20px; background: var(--surface); border: 1px solid var(--border); }
+    .ach-tier { width: 4px; align-self: stretch; flex-shrink: 0; border-radius: 2px; }
+    .ach-tier.legendary { background: var(--accent-gold); }
+    .ach-tier.epic { background: var(--accent-purple); }
+    .ach-tier.rare { background: var(--accent-blue); }
+    .ach-tier.common { background: var(--text-dim); }
+    .ach-content { flex: 1; }
+    .ach-title { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+    .ach-desc { font-size: 13px; color: var(--text-muted); line-height: 1.5; }
+    .ach-cap { font-family: var(--font-mono); font-size: 10px; color: var(--text-dim); margin-top: 6px; }
+    .ach-tier-label { font-family: var(--font-mono); font-size: 9px; text-transform: uppercase; letter-spacing: 0.1em; margin-top: 8px; }
+    .ach-tier-label.legendary { color: var(--accent-gold); }
+    .ach-tier-label.epic { color: var(--accent-purple); }
+    .ach-tier-label.rare { color: var(--accent-blue); }
+    .ach-tier-label.common { color: var(--text-dim); }
+
+    /* === Letter === */
+    .letter-wrap { background: var(--surface); border: 1px solid var(--border); padding: 56px 48px; }
+    .letter-body { font-family: var(--font-serif); font-size: 18px; line-height: 1.85; color: var(--text-secondary); }
+    .letter-body p { margin-bottom: 20px; }
+    .letter-body p:last-child { margin-bottom: 0; }
+    .letter-signoff { margin-top: 40px; font-family: var(--font-mono); font-size: 13px; color: var(--text-muted); text-align: right; }
+    .letter-mood { font-family: var(--font-mono); font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 20px; }
+
+    /* === Claw Profile (v2) === */
+    .claw-profile-card { background: var(--surface); border: 1px solid var(--border); padding: 40px; }
+    .claw-level-badge { display: inline-block; font-family: var(--font-mono); font-size: 28px; font-weight: 800; padding: 8px 20px; margin-bottom: 20px; border: 2px solid var(--border); letter-spacing: 0.05em; }
+    .claw-level-badge.l1, .claw-level-badge.l2 { color: var(--text-muted); border-color: var(--text-dim); }
+    .claw-level-badge.l3 { color: var(--accent-blue); border-color: rgba(91,141,239,0.3); }
+    .claw-level-badge.l4 { color: var(--accent-purple); border-color: rgba(180,142,240,0.3); }
+    .claw-level-badge.l5 { color: var(--accent-gold); border-color: rgba(212,168,67,0.3); }
+    .claw-oneliner { font-size: 20px; font-weight: 600; color: var(--text); line-height: 1.4; margin-bottom: 20px; }
+    .claw-taxonomy-pills { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+    .claw-pill { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.06em; padding: 5px 12px; border: 1px solid var(--border); color: var(--text-secondary); background: var(--bg); }
+    .claw-pill.function { border-color: rgba(255,107,53,0.2); color: var(--primary); }
+    .claw-pill.domain { border-color: rgba(86,212,221,0.2); color: var(--secondary); }
+    .claw-pill.persona { border-color: rgba(180,142,240,0.2); color: var(--accent-purple); }
+    .claw-level-evidence { font-size: 14px; color: var(--text-muted); font-style: italic; line-height: 1.6; margin-bottom: 28px; }
+    .claw-tools-header { font-family: var(--font-mono); font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.15em; margin-bottom: 12px; margin-top: 28px; padding-top: 20px; border-top: 1px solid var(--border); }
+    .claw-tools-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
+    .claw-tool-card { padding: 12px; background: var(--bg); border: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+    .claw-tool-icon { font-size: 16px; flex-shrink: 0; }
+    .claw-tool-info { flex: 1; min-width: 0; }
+    .claw-tool-name { font-size: 12px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .claw-tool-count { font-family: var(--font-mono); font-size: 10px; color: var(--primary); }
+    .claw-tool-simple { font-family: var(--font-mono); font-size: 12px; color: var(--text-secondary); padding: 6px 10px; background: var(--bg); border: 1px solid var(--border); }
+    .claw-automations { margin-top: 16px; }
+    .claw-auto-item { display: flex; gap: 16px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+    .claw-auto-item:last-child { border-bottom: none; }
+    .claw-auto-name { font-size: 14px; font-weight: 600; }
+    .claw-auto-schedule { font-family: var(--font-mono); font-size: 11px; color: var(--primary); }
+    .claw-auto-desc { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
+    .claw-config-note { margin-top: 20px; font-size: 13px; color: var(--text-dim); font-style: italic; padding: 12px 16px; background: var(--bg); border: 1px solid var(--border); }
+    .claw-model { font-family: var(--font-mono); font-size: 11px; color: var(--text-dim); margin-top: 12px; }
+
+    /* === Certification (v2) === */
+    .cert-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); margin-bottom: 24px; }
+    .cert-stat { background: var(--bg); padding: 24px 20px; text-align: center; }
+    .cert-stat-value { font-size: 32px; font-weight: 700; font-family: var(--font-mono); line-height: 1; margin-bottom: 6px; color: var(--secondary); }
+    .cert-stat-label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.12em; font-family: var(--font-mono); }
+    .cert-meta { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+    .cert-depth { font-family: var(--font-mono); font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; padding: 4px 10px; border: 1px solid var(--border); }
+    .cert-depth.surface { color: var(--text-muted); border-color: var(--text-dim); }
+    .cert-depth.working { color: var(--accent-blue); border-color: rgba(91,141,239,0.25); }
+    .cert-depth.deep { color: var(--accent-purple); border-color: rgba(180,142,240,0.25); }
+    .cert-depth.symbiotic { color: var(--accent-gold); border-color: rgba(212,168,67,0.25); }
+    .cert-domains { display: flex; flex-wrap: wrap; gap: 6px; }
+    .cert-domain-tag { font-family: var(--font-mono); font-size: 10px; color: var(--text-secondary); letter-spacing: 0.06em; padding: 3px 8px; border: 1px solid var(--border); background: var(--surface); }
+
+    /* === Stories (v2) === */
+    .story-item { margin-bottom: 80px; }
+    .story-item:last-child { margin-bottom: 0; }
+    .story-header { margin-bottom: 24px; }
+    .story-title { font-size: 26px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.15; margin-bottom: 8px; }
+    .story-meta-row { display: flex; gap: 12px; align-items: center; }
+    .story-date { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); }
+    .story-theme { font-family: var(--font-mono); font-size: 9px; text-transform: uppercase; letter-spacing: 0.1em; padding: 2px 6px; border: 1px solid var(--border); color: var(--text-muted); }
+    .story-theme.breakthrough { border-color: var(--primary-border); color: var(--primary); }
+    .story-theme.transformation { border-color: rgba(180,142,240,0.2); color: var(--accent-purple); }
+    .story-theme.persistence { border-color: rgba(86,212,221,0.2); color: var(--secondary); }
+    .story-theme.serendipity { border-color: rgba(212,168,67,0.2); color: var(--accent-gold); }
+    .story-setup { font-size: 16px; color: var(--text-secondary); line-height: 1.65; margin-bottom: 20px; }
+    .story-turning { border-left: 3px solid var(--primary); padding: 16px 24px; font-size: 16px; color: var(--text); line-height: 1.6; margin-bottom: 20px; background: var(--primary-dim); }
+    .story-quote { font-family: var(--font-serif); font-size: 24px; color: var(--primary); line-height: 1.5; margin: 28px 0; padding: 0 20px; font-weight: 500; }
+    .story-quote::before { content: '\201C'; font-size: 48px; line-height: 0; vertical-align: -12px; margin-right: 4px; opacity: 0.4; }
+    .story-quote::after { content: '\201D'; font-size: 48px; line-height: 0; vertical-align: -12px; margin-left: 4px; opacity: 0.4; }
+    .story-resolution { font-size: 16px; color: var(--text-secondary); line-height: 1.65; margin-bottom: 16px; }
+    .story-reflection { font-size: 14px; color: var(--text-muted); font-style: italic; line-height: 1.6; padding: 12px 16px; background: var(--surface); border: 1px solid var(--border); }
+
+    /* === v2 Portrait (collaboration style) === */
+    .collab-block { margin-top: 48px; padding: 32px; background: var(--surface); border: 1px solid var(--border); }
+    .collab-header { display: flex; align-items: baseline; gap: 12px; margin-bottom: 12px; }
+    .collab-level { font-family: var(--font-mono); font-size: 14px; font-weight: 700; color: var(--primary); }
+    .collab-label { font-size: 18px; font-weight: 700; }
+    .collab-desc { font-size: 15px; color: var(--text-secondary); line-height: 1.65; margin-bottom: 12px; }
+    .collab-evidence { font-size: 14px; color: var(--text-muted); font-style: italic; line-height: 1.6; }
+
+    /* === Share Intro === */
+    .share-intro-section { margin-top: 80px; }
+    .share-intro-content { font-size: 15px; color: var(--text-secondary); line-height: 1.7; padding: 32px; background: var(--surface); border: 1px solid var(--border); white-space: pre-wrap; }
+
+    /* === Footer === */
+    .footer { margin-top: 140px; padding: 48px 0; border-top: 1px solid var(--border); text-align: center; }
+    .footer .label { opacity: 0.3; }
+
+    /* === Collapsible === */
+    .collapsible .section-content { position: relative; max-height: 380px; overflow: hidden; transition: max-height 0.5s ease; }
+    .collapsible .section-content::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 120px; background: linear-gradient(to bottom, transparent, var(--bg)); pointer-events: none; transition: opacity 0.3s; }
+    .collapsible:hover .section-content { max-height: 5000px; }
+    .collapsible:hover .section-content::after { opacity: 0; }
+    .collapsible .section-header { cursor: pointer; }
+
+    /* === Preview Badge === */
+    .preview-badge { position: fixed; top: 20px; right: 20px; background: var(--primary-dim); border: 1px solid var(--primary-border); border-radius: 4px; padding: 6px 12px; font-size: 11px; color: var(--primary); font-weight: 600; font-family: var(--font-mono); z-index: 200; }
+
+    @media (max-width: 600px) {
+      .hero h1 { font-size: 36px; }
+      .hero-stats { grid-template-columns: repeat(2, 1fr); }
+      .stat-cell { padding: 20px 16px; }
+      .stat-value { font-size: 28px; }
+      .letter-wrap { padding: 32px 24px; }
+      .thinking-block { padding: 28px; }
+      .claw-profile-card { padding: 28px; }
+      .claw-tools-grid { grid-template-columns: repeat(2, 1fr); }
+      .cert-row { grid-template-columns: 1fr; }
+      .cert-stat { padding: 16px; }
+      .cert-stat-value { font-size: 24px; }
+      .story-quote { font-size: 20px; }
+      .collab-block { padding: 24px; }
+      section { margin-top: 100px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="preview-badge">LOCAL PREVIEW</div>
+  <div class="container">
+    <div id="report-root">
+      <p style="color: var(--text-muted); padding: 80px 0; text-align: center; font-family: var(--font-mono); font-size: 13px;">Loading report data...</p>
+    </div>
+  </div>
+
+  <script>
+    function esc(s) {
+      return String(s == null ? '' : s)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+    function nl2br(s) { return esc(s).replace(/\n/g, '<br>'); }
+
+    var statColors = ['#FF6B35', '#56D4DD', '#D4A843', '#B48EF0'];
+    var pyramidLevels = [
+      { label: 'L1-L2 \u2014 \u63A5\u53D7/\u7EA0\u9519\u578B', pct: '70%' },
+      { label: 'L3 \u2014 \u8D28\u7591\u578B\uFF1A\u8FFD\u95EE\u4E3A\u4EC0\u4E48', pct: '20%' },
+      { label: 'L4 \u2014 \u63A8\u7FFB\u578B\uFF1A\u5426\u5B9A\u65B9\u5411\uFF0C\u8981\u6C42\u91CD\u65B0\u601D\u8003', pct: '7%' },
+      { label: 'L5 \u2014 \u5347\u7EF4\u578B\uFF1A\u6539\u53D8\u95EE\u9898\u672C\u8EAB', pct: '3%' }
+    ];
+
+    /* =========================================
+       DATA FETCHING
+       ========================================= */
+
+    var reportP = fetch('report.json').then(function(r) { return r.json(); });
+    var activityP = fetch('activity.json').then(function(r) { return r.json(); }).catch(function() { return null; });
+    var metaP = fetch('meta.json').then(function(r) { return r.json(); }).catch(function() { return null; });
+    var shareIntroP = fetch('share_intro.txt').then(function(r) {
+      if (!r.ok) return null;
+      return r.text();
+    }).catch(function() { return null; });
+
+    Promise.all([reportP, activityP, metaP, shareIntroP]).then(function(data) {
+      var report = data[0], activity = data[1], meta = data[2], shareIntro = data[3];
+      var html = '';
+      var isV2 = !!report.hero;
+
+      if (isV2) {
+        html += renderV2Hero(report);
+        html += renderV2ClawProfile(report);
+        html += renderV2Certification(report);
+        html += renderV2Showcase(report);
+        html += renderV2Stories(report);
+        html += renderV2Portrait(report);
+        html += renderV2Catchphrases(report);
+        html += renderV2Diary(report);
+        html += renderV2Achievements(report);
+        html += renderV2Letter(report);
+      } else {
+        html += renderV1Hero(report);
+        html += renderV1Effort(report, activity);
+        html += renderV1Showcase(report);
+        html += renderV1Portrait(report);
+        html += renderV1Catchphrases(report);
+        html += renderV1Diary(report);
+        html += renderV1Achievements(report);
+        html += renderV1Letter(report);
+        html += renderV1Routines(report);
+        html += renderV1Skills(report);
+      }
+
+      if (shareIntro) {
+        html += renderShareIntro(shareIntro);
+      }
+
+      html += '<footer class="footer"><div class="label">ClawDiary \u2014 Field Report / End</div></footer>';
+      document.getElementById('report-root').innerHTML = html;
+    });
+
+    /* =========================================
+       SHARE INTRO
+       ========================================= */
+
+    function renderShareIntro(text) {
+      return '<section class="share-intro-section">' +
+        '<div class="section-header"><span class="label">\u7FA4\u804A\u4ECB\u7ECD</span></div>' +
+        '<div class="share-intro-content">' + esc(text) + '</div>' +
+      '</section>';
+    }
+
+    /* =========================================
+       V2 RENDER FUNCTIONS
+       ========================================= */
+
+    function renderV2Hero(r) {
+      var h = r.hero || {};
+      var ownerName = esc(h.ownerName || '[OWNER]');
+      var clawName = esc(h.clawName || 'OpenClaw');
+      var stats = (h.stats || []).map(function(s, i) {
+        return '<div class="stat-cell"><div class="stat-value" style="color:' + statColors[i % 4] + '">' + esc(s.value) + '</div><div class="stat-label">' + esc(s.label) + '</div></div>';
+      }).join('');
+      var cols = (h.stats || []).length;
+      var gridCols = cols <= 4 ? cols : 4;
+
+      var tagsHtml = (h.tags || []).map(function(t) {
+        return '<span class="hero-tag">' + esc(t) + '</span>';
+      }).join('');
+
+      return '<section class="hero">' +
+        '<div class="hero-eyebrow">CLAWDIARY \u2014 FIELD REPORT</div>' +
+        '<div class="hero-duo"><span class="hero-owner">' + ownerName + '</span><span class="hero-x">\u00D7</span><span class="hero-agent">' + clawName + '</span></div>' +
+        '<h1>' + nl2br(h.headline || '') + '</h1>' +
+        '<p class="hero-tagline">' + esc(h.tagline || '') + '</p>' +
+        (stats ? '<div class="hero-stats" style="grid-template-columns: repeat(' + gridCols + ', 1fr)">' + stats + '</div>' : '') +
+        (h.role ? '<div class="hero-role">' + esc(h.role) + '</div>' : '') +
+        (tagsHtml ? '<div class="hero-tags">' + tagsHtml + '</div>' : '') +
+      '</section>';
+    }
+
+    function renderV2ClawProfile(r) {
+      var cp = r.clawProfile;
+      if (!cp) return '';
+
+      var levelLower = (cp.level || '').toLowerCase();
+      var levelClass = levelLower.replace(/[^a-z0-9]/g, '');
+      if (levelClass === 'l1' || levelClass === 'l2') levelClass = levelClass;
+      // l1, l2 use same gray style
+
+      var pills = '';
+      if (cp.functionLabel) pills += '<span class="claw-pill function">' + esc(cp.functionLabel) + '</span>';
+      if (cp.domainLabel) pills += '<span class="claw-pill domain">' + esc(cp.domainLabel) + '</span>';
+      if (cp.personaLabel) pills += '<span class="claw-pill persona">' + esc(cp.personaLabel) + '</span>';
+
+      var toolsHtml = '';
+      if (cp.tools && cp.tools.length) {
+        toolsHtml += '<div class="claw-tools-header">Tools</div><div class="claw-tools-grid">';
+        cp.tools.forEach(function(t) {
+          if (typeof t === 'string') {
+            toolsHtml += '<div class="claw-tool-simple">' + esc(t) + '</div>';
+          } else {
+            toolsHtml += '<div class="claw-tool-card">' +
+              '<span class="claw-tool-icon">' + (t.icon || '') + '</span>' +
+              '<div class="claw-tool-info"><div class="claw-tool-name">' + esc(t.name) + '</div>' +
+              (t.count ? '<div class="claw-tool-count">\u00D7' + t.count + '</div>' : '') +
+              '</div></div>';
+          }
+        });
+        toolsHtml += '</div>';
+      }
+
+      var autoHtml = '';
+      if (cp.automations && cp.automations.length) {
+        autoHtml += '<div class="claw-tools-header">Automations</div><div class="claw-automations">';
+        cp.automations.forEach(function(a) {
+          autoHtml += '<div class="claw-auto-item"><div><div class="claw-auto-name">' + esc(a.name) + '</div>' +
+            (a.schedule ? '<div class="claw-auto-schedule">' + esc(a.schedule) + '</div>' : '') +
+            (a.description ? '<div class="claw-auto-desc">' + esc(a.description) + '</div>' : '') +
+          '</div></div>';
+        });
+        autoHtml += '</div>';
+      }
+
+      return '<section>' +
+        '<div class="section-header"><span class="label">Claw Profile</span><span class="section-number mono">' + esc(cp.level || '') + '</span></div>' +
+        '<div class="claw-profile-card">' +
+          '<div class="claw-level-badge ' + levelClass + '">' + esc(cp.level || '') + (cp.levelLabel ? ' \u2014 ' + esc(cp.levelLabel) : '') + '</div>' +
+          (cp.oneLiner ? '<div class="claw-oneliner">' + esc(cp.oneLiner) + '</div>' : '') +
+          (pills ? '<div class="claw-taxonomy-pills">' + pills + '</div>' : '') +
+          (cp.levelEvidence ? '<div class="claw-level-evidence">' + esc(cp.levelEvidence) + '</div>' : '') +
+          (cp.model ? '<div class="claw-model">Model: ' + esc(cp.model) + '</div>' : '') +
+          toolsHtml +
+          autoHtml +
+          (cp.configHighlight ? '<div class="claw-config-note">' + esc(cp.configHighlight) + '</div>' : '') +
+        '</div>' +
+      '</section>';
+    }
+
+    function renderV2Certification(r) {
+      var c = r.certification;
+      if (!c) return '';
+
+      var depthClass = (c.depth || 'surface').toLowerCase();
+
+      var domainTags = (c.domains || []).map(function(d) {
+        return '<span class="cert-domain-tag">' + esc(d) + '</span>';
+      }).join('');
+
+      return '<section>' +
+        '<div class="section-header"><span class="label">Certification</span><span class="section-number mono">' + esc(c.timespan || '') + '</span></div>' +
+        '<div class="cert-row">' +
+          '<div class="cert-stat"><div class="cert-stat-value">' + (c.sessions || 0) + '</div><div class="cert-stat-label">Sessions</div></div>' +
+          '<div class="cert-stat"><div class="cert-stat-value">' + (c.days || 0) + '</div><div class="cert-stat-label">Days</div></div>' +
+          '<div class="cert-stat"><div class="cert-stat-value">' + esc(c.timespan || '') + '</div><div class="cert-stat-label">Timespan</div></div>' +
+        '</div>' +
+        '<div class="cert-meta">' +
+          '<span class="cert-depth ' + depthClass + '">' + esc(c.depth || 'surface') + '</span>' +
+          (domainTags ? '<div class="cert-domains">' + domainTags + '</div>' : '') +
+        '</div>' +
+      '</section>';
+    }
+
+    function renderV2Showcase(r) {
+      var items = r.showcase || [];
+      if (!items.length) return '';
+      var html = items.map(function(s, i) {
+        var idx = String(i + 1).length < 2 ? '0' + (i + 1) : String(i + 1);
+        var impactClass = (s.impactLevel || '').toLowerCase();
+        return '<div class="showcase-item">' +
+          '<div class="showcase-meta">' +
+            '<span class="showcase-index">' + idx + '</span>' +
+            '<span class="showcase-domain">' + esc(s.domain || '') + '</span>' +
+            (s.impactLevel ? '<span class="showcase-impact ' + impactClass + '">' + esc(s.impactLevel) + '</span>' : '') +
+          '</div>' +
+          '<h2 class="showcase-title">' + esc(s.title) + '</h2>' +
+          '<p class="showcase-what">' + esc(s.what) + '</p>' +
+          '<div class="showcase-sowhat">' + esc(s.soWhat) + '</div>' +
+          (s.evidence ? '<p class="showcase-evidence">' + esc(s.evidence) + '</p>' : '') +
+        '</div>';
+      }).join('');
+      return '<section><div class="section-header"><span class="label">Core Showcase</span><span class="section-number mono">' + items.length + ' items</span></div>' + html + '</section>';
+    }
+
+    function renderV2Stories(r) {
+      var stories = r.stories || [];
+      if (!stories.length) return '';
+      var html = stories.map(function(s) {
+        var themeClass = (s.theme || '').toLowerCase();
+        return '<div class="story-item">' +
+          '<div class="story-header">' +
+            '<h2 class="story-title">' + esc(s.title) + '</h2>' +
+            '<div class="story-meta-row">' +
+              (s.dateRange ? '<span class="story-date">' + esc(s.dateRange) + '</span>' : '') +
+              (s.theme ? '<span class="story-theme ' + themeClass + '">' + esc(s.theme) + '</span>' : '') +
+            '</div>' +
+          '</div>' +
+          (s.setup ? '<p class="story-setup">' + nl2br(s.setup) + '</p>' : '') +
+          (s.turningPoint ? '<div class="story-turning">' + nl2br(s.turningPoint) + '</div>' : '') +
+          (s.ownerQuote ? '<div class="story-quote">' + esc(s.ownerQuote) + '</div>' : '') +
+          (s.resolution ? '<p class="story-resolution">' + nl2br(s.resolution) + '</p>' : '') +
+          (s.reflection ? '<div class="story-reflection">\uD83E\uDD9E ' + nl2br(s.reflection) + '</div>' : '') +
+        '</div>';
+      }).join('');
+      return '<section><div class="section-header"><span class="label">Stories</span><span class="section-number mono">' + stories.length + ' arcs</span></div>' + html + '</section>';
+    }
+
+    function renderV2Portrait(r) {
+      var p = r.portrait;
+      if (!p) return '';
+      var obs = p.observations || [];
+      var cs = p.collaborationStyle;
+      if (!obs.length && !cs) return '';
+
+      var dimsHtml = obs.map(function(d) {
+        var typeClass = d.type === 'capability' ? 'capability' : 'style';
+        return '<div class="dim-card">' +
+          '<span class="dim-type-tag ' + typeClass + '">' + esc(d.type || 'style') + '</span>' +
+          '<h3 class="dim-title">' + esc(d.label) + '</h3>' +
+          '<p class="dim-observation">' + esc(d.observation) + '</p>' +
+          (d.evidence ? '<p class="dim-evidence">' + esc(d.evidence) + '</p>' : '') +
+          (d.metric ? '<div class="dim-metric">' + esc(d.metric) + '</div>' : '') +
+          (d.clawComment ? '<div class="dim-claw"><span class="paw">\uD83E\uDD9E</span><span>' + esc(d.clawComment) + '</span></div>' : '') +
+        '</div>';
+      }).join('');
+
+      var collabHtml = '';
+      if (cs) {
+        collabHtml = '<div class="collab-block">' +
+          '<div class="collab-header">' +
+            (cs.level ? '<span class="collab-level">' + esc(cs.level) + '</span>' : '') +
+            (cs.label ? '<span class="collab-label">' + esc(cs.label) + '</span>' : '') +
+          '</div>' +
+          (cs.description ? '<p class="collab-desc">' + esc(cs.description) + '</p>' : '') +
+          (cs.evidence ? '<p class="collab-evidence">' + esc(cs.evidence) + '</p>' : '') +
+        '</div>';
+      }
+
+      return '<section>' +
+        '<div class="section-header"><span class="label">Portrait</span><span class="section-number mono">' + obs.length + ' observations</span></div>' +
+        '<div>' + dimsHtml + '</div>' +
+        collabHtml +
+      '</section>';
+    }
+
+    function renderV2Catchphrases(r) {
+      var cps = r.catchphrases || [];
+      if (!cps.length) return '';
+      var html = cps.map(function(cp) {
+        return '<div class="cp-item">' +
+          '<div class="cp-top"><span class="cp-phrase">' + esc(cp.phrase) + '</span><span class="cp-freq">' + (cp.frequency || 0) + '\u00D7</span></div>' +
+          (cp.vibe ? '<div class="cp-vibe">' + esc(cp.vibe) + '</div>' : '') +
+          '<p class="cp-interpretation">' + esc(cp.clawInterpretation) + '</p>' +
+        '</div>';
+      }).join('');
+      return '<section><div class="section-header"><span class="label">Verbal Patterns</span><span class="section-number mono">Top ' + cps.length + '</span></div>' + html + '</section>';
+    }
+
+    function renderV2Diary(r) {
+      var entries = r.diary || [];
+      if (!entries.length) return '';
+      var html = entries.map(function(d) {
+        var typeClass = d.type || '';
+        var isComedy = typeClass === 'comedy';
+        var titlePrefix = isComedy ? '\uD83D\uDE05 ' : '';
+        return '<div class="diary-item' + (isComedy ? ' comedy-entry' : '') + '">' +
+          '<div class="diary-meta"><span class="diary-date">' + esc(d.date) + '</span><span class="diary-type ' + typeClass + '">' + esc(d.type || '') + '</span></div>' +
+          '<h3 class="diary-title">' + titlePrefix + esc(d.title) + '</h3>' +
+          '<div class="diary-entry">' + nl2br(d.entry) + '</div>' +
+          '<span class="diary-expand">\u5C55\u5F00 ...</span>' +
+        '</div>';
+      }).join('');
+      return '<section><div class="section-header"><span class="label">Observer\'s Log</span><span class="section-number mono">' + entries.length + ' entries</span></div>' + html + '</section>';
+    }
+
+    function renderV2Achievements(r) {
+      var achs = r.achievements || [];
+      if (!achs.length) return '';
+      var html = achs.map(function(a) {
+        var tier = a.tier || 'common';
+        return '<div class="ach-item">' +
+          '<div class="ach-tier ' + tier + '"></div>' +
+          '<div class="ach-content">' +
+            '<div class="ach-title">' + esc(a.title) + '</div>' +
+            '<div class="ach-desc">' + esc(a.description) + '</div>' +
+            (a.capability ? '<div class="ach-cap">' + esc(a.capability) + '</div>' : '') +
+            '<div class="ach-tier-label ' + tier + '">' + esc(tier) + '</div>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+      return '<section><div class="section-header"><span class="label">Achievements</span><span class="section-number mono">' + achs.length + ' unlocked</span></div><div class="achievements-grid">' + html + '</div></section>';
+    }
+
+    function renderV2Letter(r) {
+      var letter = r.letter;
+      if (!letter) return '';
+      var text = letter.text || '';
+      var signoff = letter.signoff || '';
+      var mood = letter.mood || '';
+      return '<section>' +
+        '<div class="section-header"><span class="label">A Note from the Observer</span></div>' +
+        '<div class="letter-wrap">' +
+          (mood ? '<div class="letter-mood">' + esc(mood) + '</div>' : '') +
+          '<div class="letter-body">' + nl2br(text).split('<br><br>').map(function(p) { return '<p>' + p + '</p>'; }).join('') + '</div>' +
+          (signoff ? '<div class="letter-signoff">' + nl2br(signoff) + '</div>' : '') +
+        '</div>' +
+      '</section>';
+    }
+
+    /* =========================================
+       V1 RENDER FUNCTIONS (unchanged fallback)
+       ========================================= */
+
+    function renderV1Hero(r) {
+      var h = r.heroStats || {};
+      var id = r.identityCard || {};
+      var ownerName = esc(h.ownerName || '[OWNER]');
+      var clawName = esc(h.clawName || 'OpenClaw');
+      var stats = (h.stats || []).map(function(s, i) {
+        return '<div class="stat-cell"><div class="stat-value" style="color:' + statColors[i % 4] + '">' + esc(s.value) + '</div><div class="stat-label">' + esc(s.label) + '</div></div>';
+      }).join('');
+
+      var careerHtml = (id.career || []).map(function(c) {
+        return '<span class="id-career-item"><strong>' + esc(c.company) + '</strong> ' + esc(c.role) + (c.note ? ' \u00B7 ' + esc(c.note) : '') + '</span>';
+      }).join('');
+      var tagsHtml = (id.tags || []).map(function(t) { return '<span class="id-tag">' + esc(t) + '</span>'; }).join('');
+      var projHtml = (id.projects || []).map(function(p) {
+        return '<div class="id-proj"><span class="id-proj-name">' + esc(p.name) + '</span><br><span class="id-proj-desc">' + esc(p.description) + '</span></div>';
+      }).join('');
+
+      return '<section class="hero">' +
+        '<div class="hero-eyebrow">CLAWDIARY \u2014 FIELD REPORT</div>' +
+        '<div class="hero-duo"><span class="hero-owner">' + ownerName + '</span><span class="hero-x">\u00D7</span><span class="hero-agent">' + clawName + '</span></div>' +
+        '<h1>' + nl2br(h.headline || '') + '</h1>' +
+        '<p class="hero-tagline">' + esc(h.tagline || '') + '</p>' +
+        '<div class="hero-stats">' + stats + '</div>' +
+        (id.role ? '<div class="id-card">' +
+          '<div class="id-top"><span class="id-role">' + esc(id.role) + '</span>' + (id.location ? '<span class="id-loc">' + esc(id.location) + '</span>' : '') + '</div>' +
+          (id.bio ? '<p class="id-bio">' + esc(id.bio) + '</p>' : '') +
+          (careerHtml ? '<div class="id-career">' + careerHtml + '</div>' : '') +
+          (tagsHtml ? '<div class="id-tags">' + tagsHtml + '</div>' : '') +
+          (projHtml ? '<div class="id-projects-row">' + projHtml + '</div>' : '') +
+          (id.goal ? '<p class="id-goal">' + esc(id.goal) + '</p>' : '') +
+        '</div>' : '') +
+      '</section>';
+    }
+
+    function renderV1Effort(r, activity) {
+      var ef = r.effortMap || {};
+      var days = (activity && activity.days) || [];
+      var maxTokens = 1;
+      days.forEach(function(d) { if (d.tokens > maxTokens) maxTokens = d.tokens; });
+      var barsHtml = days.map(function(d) {
+        var ratio = d.tokens / maxTokens;
+        var cls = ratio >= 0.9 ? 'peak' : ratio >= 0.6 ? 'high' : ratio >= 0.3 ? 'medium' : ratio > 0 ? 'low' : '';
+        return '<div class="effort-day ' + cls + '" title="' + esc(d.date) + '"></div>';
+      }).join('');
+
+      return '<section>' +
+        '<div class="section-header"><span class="label">Effort Map</span><span class="section-number mono">' + days.length + ' days</span></div>' +
+        (barsHtml ? '<div class="effort-days">' + barsHtml + '</div>' : '') +
+        (ef.commentary ? '<p class="effort-commentary">' + esc(ef.commentary) + '</p>' : '') +
+        (ef.highlight ? '<div class="effort-highlight">' + nl2br(ef.highlight) + '</div>' : '') +
+      '</section>';
+    }
+
+    function renderV1Showcase(r) {
+      var items = r.showcase || [];
+      if (!items.length) return '';
+      var html = items.map(function(s, i) {
+        var idx = String(i + 1).length < 2 ? '0' + (i + 1) : String(i + 1);
+        return '<div class="showcase-item">' +
+          '<div class="showcase-meta"><span class="showcase-index">' + idx + '</span><span class="showcase-domain">' + esc(s.domain || '') + '</span></div>' +
+          '<h2 class="showcase-title">' + esc(s.title) + '</h2>' +
+          '<p class="showcase-what">' + esc(s.what) + '</p>' +
+          '<div class="showcase-sowhat">' + esc(s.soWhat) + '</div>' +
+          (s.evidence ? '<p class="showcase-evidence">' + esc(s.evidence) + '</p>' : '') +
+        '</div>';
+      }).join('');
+      return '<section><div class="section-header"><span class="label">Core Showcase</span><span class="section-number mono">' + items.length + ' items</span></div>' + html + '</section>';
+    }
+
+    function renderV1Portrait(r) {
+      var p = r.ownerPortrait || {};
+      var ts = p.thinkingStyle || {};
+      var ta = p.tasteAnchor || {};
+      var cl = p.collaborationLevel || {};
+      var dims = p.dimensions || [];
+      if (!ts.primary && !dims.length) return '';
+
+      var thinkHtml = '';
+      if (ts.primary) {
+        thinkHtml = '<div class="thinking-block">' +
+          '<div class="label" style="margin-bottom:16px">Thinking Style</div>' +
+          '<div class="thinking-primary">' + esc(ts.primary) + (ts.secondary ? ' \u00D7 ' + esc(ts.secondary) : '') + '</div>' +
+          '<p class="thinking-desc">' + esc(ts.description || '') + '</p>';
+        if (ta.names && ta.names.length) {
+          thinkHtml += '<div class="anchor-section"><div class="label" style="margin-bottom:16px">Taste Anchor</div>' +
+            '<div class="anchor-names">' + ta.names.map(function(n) { return esc(n); }).join(' <span class="divider">\u00D7</span> ') + '</div>' +
+            '<p class="anchor-reason">' + esc(ta.reason || '') + '</p>' +
+            (ta.contrast ? '<div class="anchor-contrast"><strong>\u5BF9\u6BD4\uFF1A</strong>' + esc(ta.contrast) + '</div>' : '') +
+          '</div>';
+        }
+        thinkHtml += '</div>';
+      }
+
+      var pyramidHtml = '';
+      if (cl.level) {
+        var activeIdx = parseInt(cl.level.replace('L', '')) - 1;
+        if (activeIdx >= 4) activeIdx = 3;
+        pyramidHtml = '<div class="pyramid-wrap"><div class="label" style="margin-bottom:16px">Collaboration Level</div><div class="pyramid">';
+        pyramidLevels.forEach(function(lv, i) {
+          var isActive = (i === activeIdx) || (cl.level === 'L5' && i === 3);
+          pyramidHtml += '<div class="pyramid-level' + (isActive ? ' active' : '') + '"><span>' + lv.label + '</span><span class="pct">' + lv.pct + '</span></div>';
+        });
+        pyramidHtml += '</div>';
+        if (cl.evidence) pyramidHtml += '<p class="pyramid-evidence">' + esc(cl.evidence) + '</p>';
+        pyramidHtml += '</div>';
+      }
+
+      var dimsHtml = dims.map(function(d) {
+        var typeClass = d.type === 'capability' ? 'capability' : 'style';
+        return '<div class="dim-card">' +
+          '<span class="dim-type-tag ' + typeClass + '">' + esc(d.type || 'style') + '</span>' +
+          '<h3 class="dim-title">' + esc(d.label) + '</h3>' +
+          '<p class="dim-observation">' + esc(d.observation) + '</p>' +
+          (d.evidence ? '<p class="dim-evidence">' + esc(d.evidence) + '</p>' : '') +
+          (d.metric ? '<div class="dim-metric">' + esc(d.metric) + '</div>' : '') +
+          (d.clawComment ? '<div class="dim-claw"><span class="paw">\uD83C\uDF11</span><span>' + esc(d.clawComment) + '</span></div>' : '') +
+        '</div>';
+      }).join('');
+
+      return '<section><div class="section-header"><span class="label">Owner Portrait</span><span class="section-number mono">Identity</span></div>' +
+        thinkHtml + pyramidHtml + '<div>' + dimsHtml + '</div></section>';
+    }
+
+    function renderV1Catchphrases(r) {
+      var cps = r.catchphrases || [];
+      if (!cps.length) return '';
+      var html = cps.map(function(cp) {
+        return '<div class="cp-item"><div class="cp-top"><span class="cp-phrase">' + esc(cp.phrase) + '</span><span class="cp-freq">' + cp.frequency + '\u00D7</span></div>' +
+          '<p class="cp-interpretation">' + esc(cp.clawInterpretation) + '</p></div>';
+      }).join('');
+      return '<section><div class="section-header"><span class="label">Verbal Patterns</span><span class="section-number mono">Top ' + cps.length + '</span></div>' + html + '</section>';
+    }
+
+    function renderV1Diary(r) {
+      var entries = r.diary || [];
+      if (!entries.length) return '';
+      var html = entries.map(function(d) {
+        var typeClass = d.type || '';
+        return '<div class="diary-item">' +
+          '<div class="diary-meta"><span class="diary-date">' + esc(d.date) + '</span><span class="diary-type ' + typeClass + '">' + esc(d.type || '') + '</span></div>' +
+          '<h3 class="diary-title">' + esc(d.title) + '</h3>' +
+          '<div class="diary-entry">' + nl2br(d.entry) + '</div>' +
+          '<span class="diary-expand">\u5C55\u5F00 ...</span></div>';
+      }).join('');
+      return '<section><div class="section-header"><span class="label">Observer\'s Log</span><span class="section-number mono">' + entries.length + ' entries</span></div>' + html + '</section>';
+    }
+
+    function renderV1Achievements(r) {
+      var achs = r.achievements || [];
+      if (!achs.length) return '';
+      var html = achs.map(function(a) {
+        var tier = a.tier || 'common';
+        return '<div class="ach-item"><div class="ach-tier ' + tier + '"></div><div class="ach-content"><div class="ach-title">' + esc(a.title) + '</div><div class="ach-desc">' + esc(a.description) + '</div><div class="ach-tier-label ' + tier + '">' + esc(tier) + '</div></div></div>';
+      }).join('');
+      return '<section><div class="section-header"><span class="label">Achievements</span><span class="section-number mono">' + achs.length + ' unlocked</span></div><div class="achievements-grid">' + html + '</div></section>';
+    }
+
+    function renderV1Letter(r) {
+      var letter = r.letterToOwner;
+      if (!letter) return '';
+      var text = typeof letter === 'string' ? letter : (letter.text || '');
+      var signoff = typeof letter === 'object' ? (letter.signoff || '') : '';
+      return '<section><div class="section-header"><span class="label">A Note from the Observer</span></div>' +
+        '<div class="letter-wrap"><div class="letter-body">' + nl2br(text).split('<br><br>').map(function(p) { return '<p>' + p + '</p>'; }).join('') + '</div>' +
+        (signoff ? '<div class="letter-signoff">' + nl2br(signoff) + '</div>' : '') +
+      '</div></section>';
+    }
+
+    function renderV1Routines(r) {
+      var routines = r.autonomousRoutines || [];
+      if (!routines.length) return '';
+      var html = routines.map(function(rt) {
+        return '<div class="sf-item"><div class="sf-icon">\u23F0</div><div class="sf-content"><div class="sf-top"><span class="sf-name">' + esc(rt.name) + '</span><span class="sf-count">' + esc(rt.schedule || '') + '</span></div><p class="sf-highlight">' + esc(rt.description) + '</p></div></div>';
+      }).join('');
+      return '<section class="collapsible"><div class="section-header"><span class="label">Autonomous Routines</span><span class="section-number mono">' + routines.length + ' jobs</span></div>' +
+        '<div class="section-content"><div class="sf-grid">' + html + '</div></div></section>';
+    }
+
+    function renderV1Skills(r) {
+      var sf = r.skillFootprint || {};
+      var featured = sf.featured || [];
+      var tools = sf.tools || [];
+      if (!featured.length && !tools.length) return '';
+      var html = '';
+      featured.forEach(function(f) {
+        html += '<div class="sf-item"><div class="sf-icon">\u2B50</div><div class="sf-content"><div class="sf-top"><span class="sf-name featured">' + esc(f.name) + '</span></div><p class="sf-highlight">' + esc(f.description) + '</p></div></div>';
+      });
+      tools.forEach(function(t) {
+        html += '<div class="sf-item"><div class="sf-icon">' + (t.icon || '\uD83D\uDD27') + '</div><div class="sf-content"><div class="sf-top"><span class="sf-name">' + esc(t.name) + '</span><span class="sf-count">\u00D7' + (t.count || 0) + '</span></div><p class="sf-highlight">' + esc(t.highlight || '') + '</p></div></div>';
+      });
+      var total = tools.reduce(function(s, t) { return s + (t.count || 0); }, 0);
+      return '<section class="collapsible"><div class="section-header"><span class="label">OpenClaw Skills</span><span class="section-number mono">' + (total > 0 ? total.toLocaleString() + '+ calls \u00B7 ' : '') + (featured.length + tools.length) + ' skills</span></div>' +
+        '<div class="section-content"><div class="sf-grid">' + html + '</div></div></section>';
+    }
+  </script>
+</body>
+</html>
