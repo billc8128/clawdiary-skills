@@ -1283,6 +1283,31 @@ def validate_v2(report: dict) -> Tuple[List[str], List[str]]:
     if depth not in VALID_DEPTHS:
         errors.append(f"certification.depth must be surface/working/deep/symbiotic, got: {depth!r}")
 
+    # Behavioral sub-dimensions (new v2 fields, warn if missing)
+    valid_depth_dims = {"D1", "D2", "D3", "D4", "D5"}
+    valid_breadth_dims = {"B1", "B2", "B3", "B4", "B5"}
+    valid_orch_dims = {"O1", "O2", "O3", "O4", "O5"}
+    dim_depth = cert.get("dimensionDepth", "")
+    dim_breadth = cert.get("dimensionBreadth", "")
+    dim_orch = cert.get("dimensionOrchestration", "")
+    if dim_depth and dim_depth not in valid_depth_dims:
+        errors.append(f"certification.dimensionDepth must be D1-D5, got: {dim_depth!r}")
+    if dim_breadth and dim_breadth not in valid_breadth_dims:
+        errors.append(f"certification.dimensionBreadth must be B1-B5, got: {dim_breadth!r}")
+    if dim_orch and dim_orch not in valid_orch_dims:
+        errors.append(f"certification.dimensionOrchestration must be O1-O5, got: {dim_orch!r}")
+    if not dim_depth or not dim_breadth or not dim_orch:
+        warnings.append("certification missing dimensionDepth/Breadth/Orchestration sub-dimensions")
+    signal_ev = cert.get("signalEvidence", {})
+    if dim_depth and not signal_ev.get("depth"):
+        warnings.append("certification.signalEvidence.depth is empty")
+    if dim_breadth and not signal_ev.get("breadth"):
+        warnings.append("certification.signalEvidence.breadth is empty")
+    if dim_orch and not signal_ev.get("orchestration"):
+        warnings.append("certification.signalEvidence.orchestration is empty")
+    if not cert.get("levelDescriptor"):
+        warnings.append("certification.levelDescriptor is empty")
+
     diary = report.get("diary", [])
     if len(diary) < 5:
         errors.append(f"diary has {len(diary)} entries, need at least 5")
@@ -1364,10 +1389,11 @@ def validate_v2(report: dict) -> Tuple[List[str], List[str]]:
 
     cert_sessions = cert.get("sessions", 0)
     if level and cert_sessions:
-        expected_min = {"L1": 0, "L2": 10, "L3": 30, "L4": 100, "L5": 100}
-        min_sessions = expected_min.get(level, 0)
-        if isinstance(cert_sessions, (int, float)) and cert_sessions < min_sessions:
-            warnings.append(f"clawProfile.level={level} but certification.sessions={cert_sessions} (expected >= {min_sessions})")
+        # Session counts are reference signals, not hard thresholds
+        session_signals = {"L1": 0, "L2": 5, "L3": 15, "L4": 30, "L5": 50}
+        min_signal = session_signals.get(level, 0)
+        if isinstance(cert_sessions, (int, float)) and cert_sessions < min_signal:
+            warnings.append(f"clawProfile.level={level} but certification.sessions={cert_sessions} (unusually low, expected ~{min_signal}+ as reference signal)")
 
     return errors, warnings
 

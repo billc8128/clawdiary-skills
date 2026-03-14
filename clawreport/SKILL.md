@@ -243,7 +243,16 @@ Write `_cr_parts/report.json` with this structure:
     "days": 0,
     "timespan": "string — e.g. 17 天 or 3 个月",
     "domains": ["string — 1-3 domain labels"],
-    "depth": "surface|working|deep|symbiotic"
+    "depth": "surface|working|deep|symbiotic",
+    "dimensionDepth": "D1|D2|D3|D4|D5",
+    "dimensionBreadth": "B1|B2|B3|B4|B5",
+    "dimensionOrchestration": "O1|O2|O3|O4|O5",
+    "levelDescriptor": "string — 2-3 chars: 深度突出/全面型/广度见长/驾驭力强",
+    "signalEvidence": {
+      "depth": "string — behavioral evidence for depth rating",
+      "breadth": "string — behavioral evidence for breadth rating",
+      "orchestration": "string — behavioral evidence for orchestration rating"
+    }
   },
 
   "portrait": {
@@ -374,12 +383,29 @@ The claw taxonomy has 4 dimensions. Three are free text (AI describes freely, se
            执行者、军师、伙伴、教练、管家...
   示例输出："毒舌但高效"、"冷静严格的军师"、"温柔耐心的伙伴"、"暴躁执行者"
 
-成长等级 (level) — 唯一的硬枚举:
-  L1 (幼虾, <10 sessions)  — 刚开始用，还在试探
-  L2 (硬壳, 10-30 sessions) — 形成固定用法，开始依赖
-  L3 (铠甲, 30-100 sessions) — 深度协作，有自己的使用哲学
-  L4 (泰坦, 100+ sessions, 推翻AI方向) — 能驾驭AI，经常否定AI的建议
-  L5 (共生, AI能预判需求) — AI已经能预判主人的下一步
+成长等级 (level) — 唯一的硬枚举，基于三个行为子维度综合判定:
+
+  子维度 Depth (专业深度 D1-D5):
+    D1 接受默认  D2 有理由地选择  D3 架构级决策  D4 纠正AI  D5 创造新模式
+
+  子维度 Breadth (领域广度 B1-B5):
+    B1 单域单工具  B2 单域多工具  B3 2-3域跨域决策  B4 4+域整合  B5 跨域迁移
+
+  子维度 Orchestration (协作驾驭 O1-O5):
+    O1 单轮问答  O2 多轮细化  O3 给AI策略方向  O4 当项目经理  O5 设计AI工作流
+
+  综合规则: L = round(mean(D, B, O))
+    偏才: max-min >= 2 时标注强项
+    AI 给出 2-3 字 levelDescriptor: "深度突出" / "全面型" / "广度见长" / "驾驭力强"
+
+  最终等级:
+  L1 (幼虾)  — 探索者，刚开始用AI
+  L2 (硬壳)  — 使用者，能有效使用AI完成任务
+  L3 (铠甲)  — 驾驭者，能指挥AI做系统级工作
+  L4 (泰坦)  — 协作者，AI是团队成员，用户是tech lead
+  L5 (共生)  — 架构师，设计人+AI的协作系统
+
+  Session 数量是参考信号，不是硬门槛
 
 oneLiner — 组合三维度 + 等级:
   示例："L4 毒舌严格的全栈编程龙虾"
@@ -427,22 +453,42 @@ Each item:
 - `domain`: Domain tag (free text, server normalizes later)
 - `impactLevel`: `paradigm` (changed the game) > `invention` (created something new) > `mastery` (extreme craft) > `craft` (high-quality execution)
 
-**`soWhat` rules (most important):**
-- Must include comparison/baseline ("most people do X, owner did Y")
-- Must use power words ("first to", "what usually takes a team of N", "even big companies haven't")
+**`soWhat` rules — Style B: Evidence + Credible Anchor (most important):**
+
+Every soWhat must be evidence-first with at least one credible anchor type:
+1. **Structural anchor:** Feature/component enumeration — "包含 OAuth + 支付 + 实时通知的生产系统"
+2. **Process anchor:** Iteration/domain-crossing depth — "经过4轮方案推翻" / "跨前端/后端/运维三域"
+3. **Output anchor:** Countable deliverables — "产出5个页面 + 3套组件，覆盖获客到留存完整链路"
+
+Formula: `soWhat = [规模/范围量化] + [复杂度证据] + [产出具体化]`
+
 - No jargon — a non-tech person must be able to say wow
-- ❌ "搭建了3台服务器的Docker环境"
-- ✅ "一个人完成了一般需要3-5人团队的基础设施搭建"
+- ✅ "从零搭建了包含 OAuth + 实时通知 + 支付集成的生产系统，覆盖前端/后端/运维三个技术域"
+- ✅ "在4轮假设-验证循环后定位到竞态条件根因，修复涉及3个服务的事务边界"
+- ✅ "对12万条用户行为数据做了留存分析 + 漏斗归因 + A/B测试设计，产出3条可执行的优化建议"
+- ❌ "一个人完成了一般需要3-5人团队的基础设施搭建"（跟虚构团队比较）
+- ❌ "连大厂都没做到"（哪个大厂？不可验证）
+- ❌ "效率提升300%"（怎么测的？基线是什么？）
+
+Forbidden in soWhat:
+- Comparisons to imaginary people/teams/timelines
+- Unverifiable superlatives ("第一个", "连XX都", "史无前例")
+- Power words substituting for evidence ("颠覆性", "降维打击")
 
 #### 4. certification
 
-Trust metrics — verifiable usage data.
+Trust metrics — verifiable usage data + behavioral evaluation.
 
 - `sessions`: Total session count (from activity data)
 - `days`: Total active days
 - `timespan`: Human-readable timespan ("17 天" or "3 个月")
 - `domains`: 1-3 primary domain labels
 - `depth`: `surface` (casual use) | `working` (regular reliance) | `deep` (integrated into workflow) | `symbiotic` (AI anticipates needs)
+- `dimensionDepth`: D1-D5 — how deep the owner goes in their primary domain
+- `dimensionBreadth`: B1-B5 — how many domains the owner crosses
+- `dimensionOrchestration`: O1-O5 — how the owner drives the AI
+- `levelDescriptor`: 2-3 char Chinese descriptor ("深度突出" / "全面型" / "广度见长" / "驾驭力强")
+- `signalEvidence`: Object with `depth`, `breadth`, `orchestration` — one sentence each citing specific behavioral evidence from conversations
 
 #### 5. portrait
 
@@ -643,13 +689,14 @@ If the user wants changes, apply them to `report.json`, re-upload via finalize, 
 |------|-------------|
 | `hero.headline` | <=20 chars, achievement or certification statement |
 | `hero.tagline` | Must contain concrete numbers/outcomes |
-| `showcase` | 3-5 items, `soWhat` must include comparison/baseline, jargon-free |
+| `showcase` | 3-5 items, `soWhat` must use credible anchors (structural/process/output), no imaginary comparisons, jargon-free |
 | `portrait.observations` | 2-4 items, >=1 capability + >=1 style, no weakness dimensions, no duplicates |
 | `portrait.collaborationStyle.level` | String `"L1"` to `"L5"`, evidence with >=2 specific quotes |
 | `clawProfile.level` | Must be `L1`-`L5` |
 | `clawProfile.function/domain/persona` | Non-empty strings |
 | `clawProfile.oneLiner` | Non-empty |
 | `certification.depth` | `surface` / `working` / `deep` / `symbiotic` |
+| `certification.dimensionDepth/Breadth/Orchestration` | D1-D5 / B1-B5 / O1-O5 + signalEvidence with behavioral citations |
 | `catchphrases` | 3-8 items, no single punctuation, no generic words, guess-perspective interpretation |
 | `diary` | 5-7 entries, >=3 breakthrough/milestone, >=3 different dates, each 80-150 chars |
 | `achievements` | 5-8 items, sorted tier DESC, first 3 legendary/epic + outcome-oriented |
@@ -695,7 +742,7 @@ After generating `report.json`, run these checks internally. Fix any violations 
 ### Content Quality Checks
 
 1. **炫耀测试:** 看完 showcase + hero 会不会想截图发群？
-2. **饭桌测试:** 每个 soWhat 念给非技术人听，他们会不会说 wow？
+2. **饭桌测试:** 每个 soWhat 念给非技术人听，他们会不会说 wow？（用证据说服，不靠修辞忽悠）
 3. **换人测试:** 把报告给别人看，会不会觉得不对——细节只属于这个人？
 4. **原文测试:** 去掉所有引文，报告还能成立吗？（不能 = 好，原话是骨架不是装饰）
 5. **AI 味测试:** 大声读一遍。任何 ChatGPT 味的句子删掉重写。
