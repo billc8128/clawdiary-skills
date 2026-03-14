@@ -1275,6 +1275,9 @@ def validate_v2(report: dict) -> Tuple[List[str], List[str]]:
     elif len(showcase) > 5:
         warnings.append(f"showcase has {len(showcase)} items, recommend at most 5")
     for i, item in enumerate(showcase):
+        if not isinstance(item, dict):
+            errors.append(f"showcase[{i}] must be object, got {type(item).__name__}")
+            continue
         if not item.get("soWhat"):
             errors.append(f"showcase[{i}] missing soWhat")
 
@@ -1361,18 +1364,24 @@ def validate_v2(report: dict) -> Tuple[List[str], List[str]]:
     elif len(catchphrases) > 8:
         warnings.append(f"catchphrases has {len(catchphrases)} items, recommend at most 8")
     for i, cp_item in enumerate(catchphrases):
+        if not isinstance(cp_item, dict):
+            errors.append(f"catchphrases[{i}] must be object, got {type(cp_item).__name__}: {str(cp_item)[:50]}")
+            continue
         phrase = cp_item.get("phrase", "")
         if len(phrase) <= 1:
             errors.append(f"catchphrases[{i}] is single char: {phrase!r}")
 
     # portrait.collaborationStyle checks
     collab = portrait.get("collaborationStyle", {})
-    collab_level = collab.get("level", "")
-    if collab_level and collab_level not in VALID_LEVELS:
-        errors.append(f"portrait.collaborationStyle.level must be L1-L5, got: {collab_level!r}")
-    collab_evidence = collab.get("evidence", [])
-    if isinstance(collab_evidence, list) and len(collab_evidence) < 2:
-        warnings.append(f"portrait.collaborationStyle.evidence has {len(collab_evidence)} quotes, recommend at least 2")
+    if isinstance(collab, str):
+        errors.append(f"portrait.collaborationStyle must be object, got string: {collab[:50]!r}")
+    elif isinstance(collab, dict):
+        collab_level = collab.get("level", "")
+        if collab_level and collab_level not in VALID_LEVELS:
+            errors.append(f"portrait.collaborationStyle.level must be L1-L5, got: {collab_level!r}")
+        collab_evidence = collab.get("evidence", [])
+        if isinstance(collab_evidence, list) and len(collab_evidence) < 2:
+            warnings.append(f"portrait.collaborationStyle.evidence has {len(collab_evidence)} quotes, recommend at least 2")
 
     # letter checks
     letter = report.get("letter", {})
@@ -1557,6 +1566,10 @@ def cmd_finalize(_args: argparse.Namespace) -> None:
         die("No credentials found. Run 'prepare' first.")
 
     creds = load_json(CRED_FILE)
+    if not creds.get("api_key"):
+        die("Credentials file has no api_key. Run 'prepare' again.")
+    if not creds.get("api_url"):
+        creds["api_url"] = API_URL
     payload = json.dumps({
         "report": merged,
         "activity": activity,
@@ -1577,6 +1590,16 @@ def cmd_finalize(_args: argparse.Namespace) -> None:
         with urllib.request.urlopen(req, timeout=30) as resp:
             result = json.loads(resp.read())
         log(f"Upload response: {json.dumps(result, indent=2)}")
+    except urllib.error.HTTPError as e:
+        body = ""
+        try:
+            body = e.read().decode("utf-8", errors="replace")
+        except Exception:
+            pass
+        log(f"Upload failed: HTTP {e.code} {e.reason}")
+        if body:
+            log(f"Server response: {body[:2000]}")
+        sys.exit(2)
     except Exception as e:
         log(f"Upload failed: {e}")
         sys.exit(2)
