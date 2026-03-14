@@ -1225,6 +1225,85 @@ VALID_DEPTHS = {"surface", "working", "deep", "symbiotic"}
 VALID_LEVELS = {"L1", "L2", "L3", "L4", "L5"}
 
 
+def auto_fix_report(report: dict) -> List[str]:
+    """Fix common AI generation errors before validation. Returns list of fixes applied."""
+    fixes: List[str] = []
+
+    # diary: description → entry
+    for i, d in enumerate(report.get("diary") or []):
+        if isinstance(d, dict) and "description" in d and "entry" not in d:
+            d["entry"] = d.pop("description")
+            fixes.append(f"diary[{i}]: renamed 'description' → 'entry'")
+
+    # showcase: headline → title (if title missing)
+    for i, s in enumerate(report.get("showcase") or []):
+        if isinstance(s, dict) and "headline" in s and "title" not in s:
+            s["title"] = s.pop("headline")
+            fixes.append(f"showcase[{i}]: renamed 'headline' → 'title'")
+
+    # catchphrases.frequency: string → number
+    for i, c in enumerate(report.get("catchphrases") or []):
+            freq_map = {"high": 10, "medium": 5, "low": 2, "very high": 15}
+            original = c["frequency"]
+            c["frequency"] = freq_map.get(original.lower(), 5)
+            fixes.append(f"catchphrases[{i}]: converted frequency '{original}' → {c['frequency']}")
+
+    # collaborationStyle: string → object
+    portrait = report.get("portrait", {})
+    if isinstance(portrait, dict):
+        cs = portrait.get("collaborationStyle")
+        if isinstance(cs, str):
+            portrait["collaborationStyle"] = {"label": cs, "description": cs}
+            fixes.append("portrait.collaborationStyle: converted string → object")
+
+    # v1 field names → v2 (if AI mixed them up)
+    renames = {"heroStats": "hero", "ownerPortrait": "portrait", "letterToOwner": "letter"}
+    for old, new in renames.items():
+        if old in report and new not in report:
+            report[new] = report.pop(old)
+            fixes.append(f"renamed top-level '{old}' → '{new}'")
+            # letterToOwner v1 can be string, v2 letter requires object
+            if new == "letter" and isinstance(report[new], str):
+                report[new] = {"text": report[new]}
+                fixes.append("letter: converted string → object")
+
+    return fixes
+
+
+def format_server_errors(error_body: str) -> str:
+    """Parse and group server validation errors for human readability."""
+    try:
+        data = json.loads(error_body)
+    except (json.JSONDecodeError, TypeError):
+        return error_body
+
+    if "details" not in data:
+        return data.get("error", error_body)
+
+    groups: Dict[str, List[str]] = {}
+    for detail in data["details"]:
+        path = detail.get("path", "")
+        field = ".".join(path.split(".")[:2]) if "." in path else (path or "(root)")
+        msg = detail.get("message", "")
+        key = f"{field}: {msg}"
+        groups.setdefault(key, []).append(path or "(root)")
+
+    lines = [f"  验证失败 ({len(data['details'])} 个问题):"]
+    for desc, paths in groups.items():
+        if len(paths) > 3:
+            lines.append(f"    {desc} ({len(paths)} 处)")
+        else:
+            for p in paths:
+                lines.append(f"    {p}: {desc.split(': ', 1)[-1]}")
+
+    if data.get("hint"):
+        lines.append(f"\n  提示: {data['hint']}")
+    if data.get("summary"):
+        lines.append(f"  摘要: {data['summary']}")
+
+    return "\n".join(lines)
+
+
 def is_v2_report(report: dict) -> bool:
     """Detect v2 report by presence of v2-only keys."""
     return "hero" in report or "clawProfile" in report
@@ -1497,6 +1576,16 @@ def cmd_finalize(_args: argparse.Namespace) -> None:
         save_json(PARTS_DIR / "report.json", merged, indent=2)
         log(f"Merged batches: {len(merged)} top-level keys ({', '.join(merged.keys())})")
 
+    log("Auto-fixing common AI errors...")
+    fixes = auto_fix_report(merged)
+    if fixes:
+        for f in fixes:
+            log(f"  FIXED: {f}")
+        save_json(PARTS_DIR / "report.json", merged, indent=2)
+        log(f"  Applied {len(fixes)} auto-fix(es)")
+    else:
+        log("  No fixes needed")
+
     log("Validating report...")
     errors, warnings = validate_report(merged)
 
@@ -1591,7 +1680,8 @@ def cmd_finalize(_args: argparse.Namespace) -> None:
             pass
         log(f"Upload failed: HTTP {e.code} {e.reason}")
         if body:
-            log(f"Server response: {body[:2000]}")
+            formatted = format_server_errors(body)
+            log(formatted)
         sys.exit(2)
     except Exception as e:
         log(f"Upload failed: {e}")
@@ -1601,14 +1691,16 @@ def cmd_finalize(_args: argparse.Namespace) -> None:
     report_url = result.get("url", f"{creds['api_url']}/p/{creds['slug']}")
     log("")
     if preview_url:
-        log(f"PREVIEW_URL={preview_url}")
+        log("报告已上传为草稿")
+        log(f"  预览并发布: {preview_url}")
+        log("  (发布前，公开链接不可访问)")
         log("")
-        log("Your report has been uploaded as a DRAFT.")
-        log("Visit the preview URL above to review and publish your report.")
-        log("You can edit text, toggle sections on/off, then click Publish.")
+        log(f"PREVIEW_URL={preview_url}")
     else:
+        log("报告已发布")
+        log(f"  查看: {report_url}")
+        log("")
         log(f"REPORT_URL={report_url}")
-        log("Done!")
 
 
 # ---------------------------------------------------------------------------

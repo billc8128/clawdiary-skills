@@ -165,6 +165,17 @@ If `_cr_parts/existing-report.json` exists, read it. This is the previous report
 
 Generate ONE file: `_cr_parts/report.json` containing all 10 blocks.
 
+**写入 report.json 时，必须一次性写入完整 JSON。不要分多次 write 同一个文件。**
+
+### Generation Strategy: Skeleton First
+
+If the input data is large (>50K tokens of compressed sessions), use a two-pass approach:
+
+1. **Write skeleton first**: Generate report.json with all fields filled with 1-2 line placeholder content
+2. **Fill in**: Go block by block, replacing placeholders with full content. Save after each block.
+
+This way, even if generation is interrupted mid-way, the skeleton provides a valid starting point.
+
 ### Internal Generation Order
 
 For quality, generate blocks in this order (but output them all together):
@@ -650,11 +661,15 @@ python3 "$SKILL_DIR/clawreport-cli.py" finalize
 
 The finalize script reads `report.json` first. If not found, it falls back to `batch1.json` + `batch2.json` + `batch3.json` for v1 compatibility.
 
-**Exit code 0 — success.** Extract the `REPORT_URL=` line from output.
+**Exit code 0 — success.** Extract the `PREVIEW_URL=` line from output (draft mode) or `REPORT_URL=` (direct publish).
+
+The CLI uploads reports as **drafts** by default. The output will show:
+- `PREVIEW_URL=...` — the preview link where the user can review and publish
+- The public URL will return 404 until the user clicks "Publish" on the preview page. **This is expected behavior.**
 
 **Exit code 1 — validation failed.** Read `_cr_parts/validation_errors.json`, fix `report.json`, and run finalize again.
 
-**Exit code 2 — upload failed.** Report the error to the user.
+**Exit code 2 — upload failed.** The CLI will show grouped error details with hints. Common cause: AI generated wrong field names (e.g. `description` instead of `entry`).
 
 ### Present to user
 

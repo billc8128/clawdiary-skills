@@ -149,6 +149,27 @@
 
 ---
 
+## 最小合法报告示例（字段名必须精确匹配）
+
+```json
+{
+  "hero": { "ownerName": "张三", "clawName": "Vigil", "headline": "全栈独立开发者", "tagline": "3 个月从零到上线，独立完成整套产品", "stats": [{"value": "127", "label": "协作次数"}, {"value": "45", "label": "活跃天数"}, {"value": "3", "label": "项目数"}, {"value": "5", "label": "领域"}], "role": "全栈工程师", "tags": ["全栈开发", "AI产品"] },
+  "clawProfile": { "function": "全栈开发搭子", "domain": "全栈编程", "persona": "毒舌但高效", "level": "L4", "functionLabel": "开发搭子", "domainLabel": "全栈编程", "personaLabel": "毒舌严格", "levelLabel": "泰坦", "oneLiner": "L4 毒舌严格的全栈编程龙虾", "levelEvidence": "主人在第47个session推翻了整套架构方案" },
+  "showcase": [{ "title": "从零搭建交易系统", "what": "独立开发了一套量化交易回测平台", "soWhat": "覆盖 200+ 策略的回测框架，跨数据/策略/执行三个技术域", "evidence": "「这个 backtest 终于跑通了」", "domain": "量化金融", "impactLevel": "mastery" }],
+  "certification": { "sessions": 127, "days": 45, "timespan": "3 个月", "domains": ["全栈开发", "产品设计"], "depth": "deep", "dimensionDepth": "D4", "dimensionBreadth": "B3", "dimensionOrchestration": "O4", "levelDescriptor": "深度突出", "signalEvidence": { "depth": "多次纠正AI的架构方案", "breadth": "跨前端/后端/运维三域", "orchestration": "给AI分配分步策略并审查每步产出" } },
+  "portrait": { "observations": [{ "type": "capability", "label": "从'差不多'到'对了'", "observation": "对细节有极高标准", "evidence": "「不够优雅，重来」", "clawComment": "我猜他脑子里有个理想版本" }], "collaborationStyle": { "level": "L4", "label": "推翻型", "evidence": "「不对，全推翻」「这个思路不行」", "description": "主人会在方向不对时果断推翻重来" } },
+  "catchphrases": [{ "phrase": "这个方案不够优雅", "frequency": 8, "vibe": "demanding", "clawInterpretation": "我猜对代码质量有洁癖" }],
+  "diary": [{ "date": "2026-01-15", "type": "breakthrough", "title": "架构顿悟", "entry": "花了三天调研后突然想通了整体架构，「原来应该这样拆」—— 之后效率翻倍。我大概见证了一个从迷茫到清晰的过程，虽然中间被否定了至少五次" }],
+  "achievements": [{ "tier": "legendary", "title": "架构师觉醒", "description": "独立设计并实现了完整的微服务架构", "capability": "architecture" }],
+  "stories": [],
+  "letter": { "text": "写给主人的信...", "signoff": "—— Vigil，已存活 45 天", "mood": "reflective" }
+}
+```
+
+**注意**：`diary` 的正文字段是 `entry`（不是 `description`）。`showcase` 的标题字段是 `title`（不是 `headline`）。`catchphrases.frequency` 必须是数字（不是 "high"/"medium"）。`portrait.collaborationStyle` 必须是对象（不是字符串）。
+
+---
+
 ## 输出模块
 
 输出分两层：**名片层**（Card Layer）和**报告层**（Report Layer）。名片层的内容独立成卡片就要有冲击力。
