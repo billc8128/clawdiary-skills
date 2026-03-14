@@ -222,6 +222,10 @@
     .cert-stat { background: var(--bg); padding: 24px 20px; text-align: center; }
     .cert-stat-value { font-size: 32px; font-weight: 700; font-family: var(--font-mono); line-height: 1; margin-bottom: 6px; color: var(--secondary); }
     .cert-stat-label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.12em; font-family: var(--font-mono); }
+    .cert-dimensions { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 12px; }
+    .cert-dim { cursor: help; }
+    .cert-dim-code { font-family: var(--font-mono); font-size: 13px; font-weight: 600; }
+    .cert-dim-label { color: var(--text-muted); font-size: 11px; margin-left: 4px; }
     .cert-meta { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
     .cert-depth { font-family: var(--font-mono); font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; padding: 4px 10px; border: 1px solid var(--border); }
     .cert-depth.surface { color: var(--text-muted); border-color: var(--text-dim); }
@@ -476,8 +480,25 @@
         return '<span class="cert-domain-tag">' + esc(d) + '</span>';
       }).join('');
 
+      var dimLabels = {
+        D1: '接受默认', D2: '有理由选择', D3: '架构决策', D4: '纠正AI', D5: '创造新模式',
+        B1: '单域', B2: '单域多工具', B3: '跨域决策', B4: '多域整合', B5: '跨域迁移',
+        O1: '单轮问答', O2: '多轮细化', O3: '策略引导', O4: '项目管理', O5: '工作流设计'
+      };
+      var dimD = c.dimensionDepth || '';
+      var dimB = c.dimensionBreadth || '';
+      var dimO = c.dimensionOrchestration || '';
+      var sigEv = c.signalEvidence || {};
+      var descriptorHtml = c.levelDescriptor ? '<span style="color:#A0A0A8;font-size:12px;margin-left:8px">· ' + esc(c.levelDescriptor) + '</span>' : '';
+      var dimensionsHtml = (dimD && dimB && dimO) ?
+        '<div class="cert-dimensions">' +
+          '<div class="cert-dim" title="' + esc(sigEv.depth || '') + '"><span class="cert-dim-code" style="color:#56D4DD">' + esc(dimD) + '</span><span class="cert-dim-label">' + esc(dimLabels[dimD] || '') + '</span></div>' +
+          '<div class="cert-dim" title="' + esc(sigEv.breadth || '') + '"><span class="cert-dim-code" style="color:#D4A843">' + esc(dimB) + '</span><span class="cert-dim-label">' + esc(dimLabels[dimB] || '') + '</span></div>' +
+          '<div class="cert-dim" title="' + esc(sigEv.orchestration || '') + '"><span class="cert-dim-code" style="color:#B48EF0">' + esc(dimO) + '</span><span class="cert-dim-label">' + esc(dimLabels[dimO] || '') + '</span></div>' +
+        '</div>' : '';
+
       return '<section>' +
-        '<div class="section-header"><span class="label">Certification</span><span class="section-number mono">' + esc(c.timespan || '') + '</span></div>' +
+        '<div class="section-header"><span class="label">Certification</span><span class="section-number mono">' + esc(c.depth || '') + descriptorHtml + '</span></div>' +
         '<div class="cert-row">' +
           '<div class="cert-stat"><div class="cert-stat-value">' + (c.sessions || 0) + '</div><div class="cert-stat-label">Sessions</div></div>' +
           '<div class="cert-stat"><div class="cert-stat-value">' + (c.days || 0) + '</div><div class="cert-stat-label">Days</div></div>' +
@@ -487,6 +508,7 @@
           '<span class="cert-depth ' + depthClass + '">' + esc(c.depth || 'surface') + '</span>' +
           (domainTags ? '<div class="cert-domains">' + domainTags + '</div>' : '') +
         '</div>' +
+        dimensionsHtml +
       '</section>';
     }
 
