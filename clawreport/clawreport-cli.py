@@ -1528,14 +1528,6 @@ def cmd_finalize(_args: argparse.Namespace) -> None:
 
     preview_path = PARTS_DIR / "report.json"
     log(f"\nReport saved to {preview_path}")
-    log("Preview your report before uploading.")
-    try:
-        confirm = input("确认上传？ [Y/n] ").strip().lower()
-        if confirm == 'n':
-            log("Upload cancelled. Report saved locally at _cr_parts/report.json")
-            sys.exit(0)
-    except EOFError:
-        pass
 
     activity = {}
     try:
@@ -1574,6 +1566,7 @@ def cmd_finalize(_args: argparse.Namespace) -> None:
         "report": merged,
         "activity": activity,
         "meta": meta,
+        "visibility": "draft",
     }).encode("utf-8")
 
     req = urllib.request.Request(
@@ -1604,10 +1597,18 @@ def cmd_finalize(_args: argparse.Namespace) -> None:
         log(f"Upload failed: {e}")
         sys.exit(2)
 
-    profile_url = f"{creds['api_url']}/p/{creds['slug']}"
+    preview_url = result.get("preview_url", "")
+    report_url = result.get("url", f"{creds['api_url']}/p/{creds['slug']}")
     log("")
-    log(f"REPORT_URL={profile_url}")
-    log("Done!")
+    if preview_url:
+        log(f"PREVIEW_URL={preview_url}")
+        log("")
+        log("Your report has been uploaded as a DRAFT.")
+        log("Visit the preview URL above to review and publish your report.")
+        log("You can edit text, toggle sections on/off, then click Publish.")
+    else:
+        log(f"REPORT_URL={report_url}")
+        log("Done!")
 
 
 # ---------------------------------------------------------------------------
