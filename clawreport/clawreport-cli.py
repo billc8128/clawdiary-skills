@@ -9,7 +9,6 @@ Two subcommands:
 Zero external dependencies (stdlib only).
 """
 
-from __future__ import annotations
 
 import argparse
 import hashlib
@@ -22,7 +21,7 @@ import urllib.request
 from collections import Counter, defaultdict
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import Optional
+from typing import Dict, List, Optional, Tuple
 
 # ---------------------------------------------------------------------------
 # Constants
@@ -117,7 +116,7 @@ def load_json(path: Path) -> dict:
         return json.load(f)
 
 
-def save_json(path: Path, data, indent: int | None = None) -> None:
+def save_json(path: Path, data, indent: Optional[int] = None) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.with_suffix(".tmp")
     with open(tmp, "w", encoding="utf-8") as f:
@@ -407,9 +406,9 @@ def select_tier(inventory: dict) -> str:
 # Session Discovery
 # ---------------------------------------------------------------------------
 
-def discover_sessions() -> list[Path]:
+def discover_sessions() -> List[Path]:
     """Find all .jsonl session files from OpenClaw agents."""
-    files: list[Path] = []
+    files: List[Path] = []
 
     # Primary: ~/.openclaw/agents/main/sessions/
     if SESSIONS_DIR.is_dir():
@@ -429,7 +428,7 @@ def discover_sessions() -> list[Path]:
     return sorted(set(files))
 
 
-def filter_recent(files: list[Path], days: int = 30) -> list[Path]:
+def filter_recent(files: List[Path], days: int = 30) -> List[Path]:
     """Keep only files modified within the last N days."""
     try:
         now = datetime.now(timezone.utc).timestamp()
@@ -446,7 +445,7 @@ def filter_recent(files: list[Path], days: int = 30) -> list[Path]:
     return result
 
 
-def sample_sessions(files: list[Path], tier: str) -> list[Path]:
+def sample_sessions(files: List[Path], tier: str) -> List[Path]:
     """Select top N recent + top M largest based on tier, deduplicated."""
     params = TIER_PARAMS[tier]
     # Filter out symlinks to prevent directory escape
@@ -465,7 +464,7 @@ def sample_sessions(files: list[Path], tier: str) -> list[Path]:
 # Activity Extraction
 # ---------------------------------------------------------------------------
 
-def extract_timestamps(path: Path) -> list[datetime]:
+def extract_timestamps(path: Path) -> List[datetime]:
     """Extract timestamps from a JSONL session file."""
     timestamps = []
     try:
@@ -504,7 +503,7 @@ def extract_timestamps(path: Path) -> list[datetime]:
     return timestamps
 
 
-def extract_activity(all_sessions: list[Path]) -> dict:
+def extract_activity(all_sessions: List[Path]) -> dict:
     """Build per-day activity data from ALL sessions."""
     cache = {}
     try:
@@ -518,7 +517,7 @@ def extract_activity(all_sessions: list[Path]) -> dict:
         local_tz = timezone.utc
 
     next_cache = {}
-    days: dict[str, dict] = defaultdict(lambda: {"sessions": 0, "tokens": 0, "timestamps": []})
+    days: Dict[str, dict] = defaultdict(lambda: {"sessions": 0, "tokens": 0, "timestamps": []})
     total_tokens = 0
 
     for path in all_sessions:
@@ -638,7 +637,7 @@ def scan_workspace(tier: str) -> dict:
     return result
 
 
-def scan_memory_logs(tier: str) -> list[dict]:
+def scan_memory_logs(tier: str) -> List[dict]:
     """Read daily memory logs based on tier."""
     params = TIER_PARAMS[tier]
     if params["memory_logs_days"] == 0:
@@ -759,7 +758,7 @@ def scan_cron(tier: str) -> dict:
     return result
 
 
-def scan_extensions() -> list[dict]:
+def scan_extensions() -> List[dict]:
     """Scan extensions directory for plugin info."""
     if not EXTENSIONS_DIR.is_dir():
         return []
@@ -786,7 +785,7 @@ def scan_extensions() -> list[dict]:
     return extensions
 
 
-def query_memory_db(limit: int) -> list[dict]:
+def query_memory_db(limit: int) -> List[dict]:
     """Query SQLite memory DB for recent memory chunks (deep tier only)."""
     if limit <= 0 or not MEMORY_DB_PATH.is_file():
         return []
@@ -812,7 +811,7 @@ def query_memory_db(limit: int) -> list[dict]:
 # Tool & Skill Extraction
 # ---------------------------------------------------------------------------
 
-def extract_tools(sampled_sessions: list[Path]) -> dict:
+def extract_tools(sampled_sessions: List[Path]) -> dict:
     """Extract tool usage counts and installed skills."""
     tool_counts: Counter = Counter()
 
@@ -870,7 +869,7 @@ def extract_tools(sampled_sessions: list[Path]) -> dict:
 # Routine Detection
 # ---------------------------------------------------------------------------
 
-def detect_routines() -> list[dict]:
+def detect_routines() -> List[dict]:
     """Detect crontab, launchd, and OpenClaw scheduled tasks."""
     routines = []
 
@@ -916,7 +915,7 @@ def detect_routines() -> list[dict]:
 # Session Compression
 # ---------------------------------------------------------------------------
 
-def compress_sessions(sampled: list[Path], tier: str) -> None:
+def compress_sessions(sampled: List[Path], tier: str) -> None:
     """Compress sampled sessions based on tier parameters."""
     params = TIER_PARAMS[tier]
     max_msg_len = params["max_msg_len"]
@@ -924,7 +923,7 @@ def compress_sessions(sampled: list[Path], tier: str) -> None:
     COMPRESSED_DIR.mkdir(parents=True, exist_ok=True)
 
     for i, path in enumerate(sampled):
-        messages: list[dict] = []
+        messages: List[dict] = []
         try:
             with open(path, "r", encoding="utf-8", errors="replace") as f:
                 for line in f:
@@ -1231,17 +1230,17 @@ def is_v2_report(report: dict) -> bool:
     return "hero" in report or "clawProfile" in report
 
 
-def validate_report(report: dict) -> tuple[list[str], list[str]]:
+def validate_report(report: dict) -> Tuple[List[str], List[str]]:
     """Validate report structure. Returns (errors, warnings)."""
     if is_v2_report(report):
         return validate_v2(report)
     return validate_v1(report)
 
 
-def validate_v2(report: dict) -> tuple[list[str], list[str]]:
+def validate_v2(report: dict) -> Tuple[List[str], List[str]]:
     """Validate v2 report structure. Returns (errors, warnings)."""
-    errors: list[str] = []
-    warnings: list[str] = []
+    errors: List[str] = []
+    warnings: List[str] = []
 
     missing = [k for k in REQUIRED_KEYS_V2 if k not in report]
     if missing:
@@ -1373,10 +1372,10 @@ def validate_v2(report: dict) -> tuple[list[str], list[str]]:
     return errors, warnings
 
 
-def validate_v1(report: dict) -> tuple[list[str], list[str]]:
+def validate_v1(report: dict) -> Tuple[List[str], List[str]]:
     """Validate v1 report structure. Returns (errors, warnings)."""
-    errors: list[str] = []
-    warnings: list[str] = []
+    errors: List[str] = []
+    warnings: List[str] = []
 
     missing = [k for k in REQUIRED_KEYS_V1 if k not in report]
     if missing:
