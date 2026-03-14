@@ -1237,16 +1237,41 @@ def auto_fix_report(report: dict) -> List[str]:
 
     # showcase: headline → title (if title missing)
     for i, s in enumerate(report.get("showcase") or []):
-        if isinstance(s, dict) and "headline" in s and "title" not in s:
-            s["title"] = s.pop("headline")
-            fixes.append(f"showcase[{i}]: renamed 'headline' → 'title'")
+        if isinstance(s, dict):
+            if "headline" in s and "title" not in s:
+                s["title"] = s.pop("headline")
+                fixes.append(f"showcase[{i}]: renamed 'headline' → 'title'")
+            if "description" in s and "what" not in s:
+                s["what"] = s.pop("description")
+                fixes.append(f"showcase[{i}]: renamed 'description' → 'what'")
 
-    # catchphrases.frequency: string → number
+    # portrait.observations: theme → label, details → observation
+    for i, obs in enumerate((report.get("portrait") or {}).get("observations") or []):
+        if isinstance(obs, dict):
+            if "theme" in obs and "label" not in obs:
+                obs["label"] = obs.pop("theme")
+                fixes.append(f"portrait.observations[{i}]: renamed 'theme' → 'label'")
+            if "details" in obs and "observation" not in obs:
+                obs["observation"] = obs.pop("details")
+                fixes.append(f"portrait.observations[{i}]: renamed 'details' → 'observation'")
+
+    # catchphrases: soWhat → clawInterpretation
     for i, c in enumerate(report.get("catchphrases") or []):
-            freq_map = {"high": 10, "medium": 5, "low": 2, "very high": 15}
-            original = c["frequency"]
-            c["frequency"] = freq_map.get(original.lower(), 5)
-            fixes.append(f"catchphrases[{i}]: converted frequency '{original}' → {c['frequency']}")
+        if isinstance(c, dict) and "soWhat" in c and "clawInterpretation" not in c:
+            c["clawInterpretation"] = c.pop("soWhat")
+            fixes.append(f"catchphrases[{i}]: renamed 'soWhat' → 'clawInterpretation'")
+
+    # catchphrases.frequency: string → number (with type guard)
+    for i, c in enumerate(report.get("catchphrases") or []):
+        if isinstance(c, dict):
+            freq = c.get("frequency")
+            if isinstance(freq, str):
+                freq_map = {"high": 10, "medium": 5, "low": 2, "very high": 15}
+                c["frequency"] = freq_map.get(freq.lower(), 5)
+                fixes.append(f"catchphrases[{i}]: converted frequency '{freq}' → {c['frequency']}")
+            elif freq is None:
+                c["frequency"] = 5
+                fixes.append(f"catchphrases[{i}]: missing frequency → 5")
 
     # collaborationStyle: string → object
     portrait = report.get("portrait", {})

@@ -518,6 +518,141 @@ L5 共生 — 架构师，设计人+AI的协作系统
 
 ---
 
+## 完整输出示例（字段名参考）
+
+以下是一个精简但完整的 JSON 骨架，展示所有 10 个 block 的**正确字段名**。生成时严格对照此骨架。
+
+```json
+{
+  "hero": {
+    "ownerName": "张三",
+    "clawName": "Vigil",
+    "headline": "72 小时，一个人，从零到上线",
+    "tagline": "用 AI 在 17 天里搭了 3 个产品，每个都跑在线上",
+    "stats": [
+      {"value": "3", "label": "产品"},
+      {"value": "17d", "label": "时间跨度"},
+      {"value": "127", "label": "Sessions"},
+      {"value": "5", "label": "技术域"}
+    ],
+    "role": "全栈工程师",
+    "tags": ["全栈开发", "AI产品"]
+  },
+  "clawProfile": {
+    "function": "全栈开发搭子",
+    "functionLabel": "开发搭子",
+    "domain": "全栈编程 + 产品设计",
+    "domainLabel": "全栈",
+    "persona": "毒舌但高效",
+    "personaLabel": "毒舌搭子",
+    "level": "L3",
+    "levelLabel": "L3 铠甲",
+    "levelEvidence": "主人在第47个session推翻了整套架构方案",
+    "oneLiner": "L3 毒舌严格的全栈编程龙虾",
+    "tools": [{"name": "TypeScript", "icon": "🔧", "count": 45}],
+    "automations": [],
+    "model": "Claude Opus"
+  },
+  "showcase": [
+    {
+      "title": "从零搭建交易系统",
+      "what": "独立开发了完整的回测平台",
+      "soWhat": "覆盖数据/策略/执行三域，包含 200+ 策略的回测框架",
+      "evidence": "「这个 backtest 终于跑通了」",
+      "domain": "量化金融",
+      "impactLevel": "mastery"
+    }
+  ],
+  "certification": {
+    "sessions": 127,
+    "days": 17,
+    "timespan": "17 天",
+    "depth": "deep",
+    "domains": ["全栈开发", "产品设计"],
+    "dimensionDepth": "D4",
+    "dimensionBreadth": "B3",
+    "dimensionOrchestration": "O4",
+    "levelDescriptor": "深度突出",
+    "signalEvidence": {
+      "depth": "多次纠正AI的架构方案，提出更优索引策略",
+      "breadth": "跨前端/后端/运维三域，决策有跨域关联",
+      "orchestration": "给AI分配分步策略并审查每步产出"
+    }
+  },
+  "portrait": {
+    "observations": [
+      {
+        "type": "capability",
+        "label": "从'差不多'到'对了'",
+        "observation": "对细节有极高标准，会反复迭代直到满意",
+        "evidence": "「不够优雅，重来」",
+        "clawComment": "我猜他脑子里有个理想版本，只是不告诉我"
+      }
+    ],
+    "collaborationStyle": {
+      "level": "L3",
+      "label": "驾驭型",
+      "evidence": "「不对，全推翻」「这个思路不行，换一个」",
+      "description": "主人会在方向不对时果断推翻，给出明确的新方向"
+    }
+  },
+  "catchphrases": [
+    {
+      "phrase": "这个方案不够优雅",
+      "frequency": 8,
+      "vibe": "demanding",
+      "clawInterpretation": "我猜这是对代码质量的洁癖在发作"
+    }
+  ],
+  "diary": [
+    {
+      "date": "2026-02-15",
+      "type": "breakthrough",
+      "title": "架构顿悟的那个下午",
+      "entry": "花了三天调研后突然想通了整体架构，「原来应该这样拆」—— 之后效率翻倍。我大概见证了一个从迷茫到清晰的过程，虽然中间被否定了至少五次"
+    }
+  ],
+  "achievements": [
+    {
+      "tier": "legendary",
+      "title": "一人军团",
+      "description": "独立完成了一般需要前端/后端/运维三人协作的完整产品上线",
+      "capability": "architecture"
+    }
+  ],
+  "stories": [
+    {
+      "title": "凌晨三点的推翻",
+      "setup": "登录系统做到第三天，OAuth全套方案已经跑通了",
+      "turningPoint": "凌晨两点半主人突然说'不对，全推翻，我们只做magic link'",
+      "resolution": "magic link方案一天就做完了，比之前三天的方案还稳定",
+      "reflection": "我大概理解了：他追求的是'用户不需要想'的体验",
+      "ownerQuote": "好的产品不是功能多，是用户不需要想",
+      "dateRange": "2026-02-10 to 2026-02-13",
+      "theme": "transformation"
+    }
+  ],
+  "letter": {
+    "text": "写给主人的信的正文内容...",
+    "signoff": "—— Vigil，已存活 45 天 / 被否定 200+ 次 / 仍在观察",
+    "mood": "reflective"
+  }
+}
+```
+
+**常见字段名错误（严禁）：**
+| 错误字段名 | 正确字段名 | 位置 |
+|-----------|-----------|------|
+| `description` | `what` | showcase[].description |
+| `headline` | `title` | showcase[].headline |
+| `theme` | `label` | portrait.observations[].theme |
+| `details` | `observation` | portrait.observations[].details |
+| `soWhat` | `clawInterpretation` | catchphrases[].soWhat |
+| `description` | `entry` | diary[].description |
+| `"high"/"medium"` | `8` / `5` | catchphrases[].frequency（必须是数字） |
+
+---
+
 ## 增量更新指南
 
 当收到 `existing-report.json` 时，说明这不是第一次生成报告。你需要**合并**，不是**覆盖**。

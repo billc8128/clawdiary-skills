@@ -176,6 +176,17 @@ If the input data is large (>50K tokens of compressed sessions), use a two-pass 
 
 This way, even if generation is interrupted mid-way, the skeleton provides a valid starting point.
 
+### ⚠️ 字段名必须严格匹配 schema
+
+生成 report.json 时，严格使用本文件和 analysis-prompt.md 中定义的字段名。常见错误：
+- showcase 用 `"what"` 不是 `"description"`
+- portrait.observations 用 `"label"`/`"observation"` 不是 `"theme"`/`"details"`
+- catchphrases 用 `"clawInterpretation"` 不是 `"soWhat"`
+- diary 用 `"entry"` 不是 `"description"`
+- catchphrases.frequency 必须是**数字**（如 `8`），不是字符串（如 `"high"`）
+
+参考 analysis-prompt.md 末尾的「完整输出示例（字段名参考）」JSON 骨架。
+
 ### Internal Generation Order
 
 For quality, generate blocks in this order (but output them all together):
