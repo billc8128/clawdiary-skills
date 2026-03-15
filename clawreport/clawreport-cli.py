@@ -407,23 +407,29 @@ def select_tier(inventory: dict) -> str:
 # ---------------------------------------------------------------------------
 
 def discover_sessions() -> List[Path]:
-    """Find all .jsonl session files from OpenClaw agents."""
+    """Find all .jsonl session files from OpenClaw agents.
+
+    Includes .deleted*, .bak*, .old files — JSONL is append-only,
+    these still contain valid usage data for accurate token counting.
+    """
     files: List[Path] = []
 
     # Primary: ~/.openclaw/agents/main/sessions/
     if SESSIONS_DIR.is_dir():
-        files.extend(
-            f for f in SESSIONS_DIR.glob("*.jsonl")
-            if not f.name.endswith(".deleted") and not f.is_symlink()
-        )
+        for f in SESSIONS_DIR.iterdir():
+            if f.is_symlink() or f.is_dir():
+                continue
+            if ".jsonl" in f.name:
+                files.append(f)
 
     # Legacy path for backward compat
     legacy = OPENCLAW_HOME / "sessions"
     if legacy.is_dir():
-        files.extend(
-            f for f in legacy.rglob("*.jsonl")
-            if not f.is_symlink()
-        )
+        for f in legacy.rglob("*"):
+            if f.is_symlink() or f.is_dir():
+                continue
+            if ".jsonl" in f.name:
+                files.append(f)
 
     return sorted(set(files))
 
@@ -503,6 +509,55 @@ def extract_timestamps(path: Path) -> List[datetime]:
     return timestamps
 
 
+def extract_usage_from_jsonl(path: Path) -> dict:
+    """Extract real token usage from JSONL session file.
+
+    Reads assistant messages with usage data.
+    Supports both Anthropic API format (input_tokens, cache_read_input_tokens, etc.)
+    and simplified format (input, cacheRead, etc.).
+    Returns {input, cacheRead, cacheWrite, output, total}.
+    """
+    usage = {"input": 0, "cacheRead": 0, "cacheWrite": 0, "output": 0}
+    try:
+        with open(path, "r", encoding="utf-8", errors="replace") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    obj = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+                # type can be "assistant" (Claude Code) or "message" (OpenClaw)
+                obj_type = obj.get("type", "")
+                if obj_type not in ("assistant", "message"):
+                    continue
+                msg = obj.get("message", {})
+                if obj_type == "message" and msg.get("role") != "assistant":
+                    continue
+                if obj_type == "assistant" and msg.get("role") not in ("assistant", None):
+                    continue
+                u = msg.get("usage")
+                if not u:
+                    continue
+                # Anthropic API format
+                fresh_input = max(0, u.get("input_tokens", u.get("input", 0)))
+                cache_read = u.get("cache_read_input_tokens", u.get("cacheRead", u.get("cache_read", 0)))
+                cache_write = u.get("cache_creation_input_tokens", u.get("cacheWrite", u.get("cache_write", 0)))
+                output = u.get("output_tokens", u.get("output", 0))
+                # Estimate cache write when agent doesn't pass it through
+                if cache_write == 0 and (fresh_input > 0 or output > 0):
+                    cache_write = fresh_input + output
+                usage["input"] += fresh_input
+                usage["cacheRead"] += cache_read
+                usage["cacheWrite"] += cache_write
+                usage["output"] += output
+    except OSError:
+        pass
+    usage["total"] = usage["input"] + usage["cacheRead"] + usage["cacheWrite"] + usage["output"]
+    return usage
+
+
 def extract_activity(all_sessions: List[Path]) -> dict:
     """Build per-day activity data from ALL sessions."""
     cache = {}
@@ -519,6 +574,7 @@ def extract_activity(all_sessions: List[Path]) -> dict:
     next_cache = {}
     days: Dict[str, dict] = defaultdict(lambda: {"sessions": 0, "tokens": 0, "timestamps": []})
     total_tokens = 0
+    total_usage = {"input": 0, "cacheRead": 0, "cacheWrite": 0, "output": 0}
 
     for path in all_sessions:
         spath = str(path)
@@ -532,14 +588,28 @@ def extract_activity(all_sessions: List[Path]) -> dict:
         cached = cache.get(spath)
         if isinstance(cached, dict) and cached.get("fp") == fp and isinstance(cached.get("tokens"), int):
             tokens = cached["tokens"]
+            # Also restore cached usage breakdown
+            for k in ("input", "cacheRead", "cacheWrite", "output"):
+                total_usage[k] += cached.get(k, 0)
         else:
-            try:
-                data = path.read_bytes()[:8 * 1024 * 1024]
-                tokens = len(TOKEN_RE.findall(data.decode("utf-8", errors="replace")))
-            except OSError:
-                tokens = size // 3
+            u = extract_usage_from_jsonl(path)
+            tokens = u["total"]
+            if tokens == 0:
+                # Fallback: word count for non-JSONL or empty usage
+                try:
+                    data = path.read_bytes()[:8 * 1024 * 1024]
+                    tokens = len(TOKEN_RE.findall(data.decode("utf-8", errors="replace")))
+                except OSError:
+                    tokens = size // 3
+            else:
+                for k in ("input", "cacheRead", "cacheWrite", "output"):
+                    total_usage[k] += u[k]
+            next_cache[spath] = {"fp": fp, "tokens": tokens,
+                                 "input": u["input"], "cacheRead": u["cacheRead"],
+                                 "cacheWrite": u["cacheWrite"], "output": u["output"]}
         total_tokens += tokens
-        next_cache[spath] = {"fp": fp, "tokens": tokens}
+        if spath not in next_cache:
+            next_cache[spath] = {"fp": fp, "tokens": tokens}
 
         timestamps = extract_timestamps(path)
         if not timestamps:
@@ -586,10 +656,25 @@ def extract_activity(all_sessions: List[Path]) -> dict:
             longest_hours = active_hours
             longest_day = day_key
 
+    # Cost calculation (Opus pricing per M tokens)
+    cost_usd = (
+        total_usage["input"] * 15.00 / 1e6
+        + total_usage["cacheRead"] * 0.30 / 1e6
+        + total_usage["cacheWrite"] * 3.75 / 1e6
+        + total_usage["output"] * 75.00 / 1e6
+    )
+
     result["summary"] = {
         "totalDays": len(result["days"]),
         "totalSessions": len(all_sessions),
         "totalTokens": total_tokens,
+        "usage": {
+            "input": total_usage["input"],
+            "cacheRead": total_usage["cacheRead"],
+            "cacheWrite": total_usage["cacheWrite"],
+            "output": total_usage["output"],
+        },
+        "costUsd": round(cost_usd, 2),
         "mostActiveDay": {"date": most_active_day, "sessions": most_active_sessions} if most_active_day else None,
         "latestNight": {"date": latest_night_date, "time": latest_night_time} if latest_night_date else None,
         "longestDay": {"date": longest_day, "hours": longest_hours} if longest_day else None,
@@ -1099,7 +1184,20 @@ def cmd_prepare(args: argparse.Namespace) -> None:
     activity = extract_activity(all_sessions)
     save_json(PARTS_DIR / "activity.json", activity)
     summary = activity["summary"]
-    log(f"  {summary['totalDays']} days, {summary['totalSessions']} sessions, {summary['totalTokens']:,} tokens")
+    def fmt_tokens(n: int) -> str:
+        if n >= 1e9:
+            return f"{n / 1e9:.1f}B"
+        if n >= 1e6:
+            return f"{n / 1e6:.1f}M"
+        if n >= 1e3:
+            return f"{n / 1e3:.1f}K"
+        return str(n)
+
+    log(f"  {summary['totalDays']} days, {summary['totalSessions']} sessions, {fmt_tokens(summary['totalTokens'])} tokens")
+    usage = summary.get("usage", {})
+    if usage.get("output", 0) > 0:
+        log(f"  Token breakdown: input={fmt_tokens(usage['input'])}, cache_read={fmt_tokens(usage['cacheRead'])}, cache_write={fmt_tokens(usage['cacheWrite'])}, output={fmt_tokens(usage['output'])}")
+        log(f"  Estimated cost: ${summary.get('costUsd', 0):.2f}")
 
     # 6. Workspace + config + memory + cron + extensions
     log("[6/8] Scanning workspace & config...")

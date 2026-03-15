@@ -187,7 +187,7 @@
   |---|------|-------|-----------|---------|
   | 1 | 消息总数 | `消息` | `"3,847"` | activity.json summary.totalMessages 或估算 |
   | 2 | 活跃天数 | `天` | `"127"` | activity.json summary.totalDays |
-  | 3 | Token 总量 | `TOKENS` | `"21.4M"` (用 K/M/B 后缀) | activity.json summary.totalTokens |
+  | 3 | Token 总量 | `TOKENS` | `"21.4M"` (用 K/M/B 后缀) | activity.json summary.totalTokens (真实 usage 数据，含 input+cacheRead+cacheWrite+output) |
   | 4 | 龙虾数量 | `龙虾` | `"3"` | 如果只有一只龙虾写 `"1"` |
 
   - ❌ `{"value": "14.0小时/天", "label": "活跃时长"}` — value 里不要带单位，不是固定 4 项之一
