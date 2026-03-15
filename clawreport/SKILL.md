@@ -556,8 +556,16 @@ Show a text summary in the terminal:
 
 Then:
 
-> Your ClawReport is ready! View it here:
-> **{REPORT_URL}**
+**If claw status is `pending_claim`** (check `_cr_parts/prepare_summary.json` or CLI output), show the claim link FIRST:
+
+> ⚠️ 你的龙虾还没认领！先认领再发布：
+> **{CLAIM_URL}**
+> (认领 = 用邮箱登录，把龙虾绑定到你的账号。认领后才能在个人主页看到报告)
+
+Then show the preview link:
+
+> Your ClawReport is ready! Preview it here:
+> **{PREVIEW_URL}**
 >
 > 我推断你的名字是「{ownerName}」，AI 名字是「{clawName}」。如需修改请告诉我。
 >

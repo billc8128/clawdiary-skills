@@ -1891,6 +1891,7 @@ def cmd_finalize(_args: argparse.Namespace) -> None:
 
     preview_url = result.get("preview_url", "")
     report_url = result.get("url", f"{creds['api_url']}/p/{creds['slug']}")
+    claim_url = creds.get("claim_url", "")
     log("")
     if preview_url:
         log("报告已上传为草稿")
@@ -1903,6 +1904,26 @@ def cmd_finalize(_args: argparse.Namespace) -> None:
         log(f"  查看: {report_url}")
         log("")
         log(f"REPORT_URL={report_url}")
+
+    # Prominent claim reminder if claw is unclaimed
+    if claim_url:
+        try:
+            req = urllib.request.Request(
+                f"{creds['api_url']}/api/claw/status",
+                headers={"Authorization": f"Bearer {creds['api_key']}"},
+            )
+            with urllib.request.urlopen(req, timeout=5) as resp:
+                status = json.loads(resp.read())
+            if status.get("status") == "pending_claim":
+                log("")
+                log("=" * 50)
+                log("⚠️  龙虾还没认领！请先认领再分享：")
+                log(f"  {claim_url}")
+                log("  (认领 = 用邮箱登录，绑定到你的账号)")
+                log("=" * 50)
+                log(f"CLAIM_URL={claim_url}")
+        except Exception:
+            pass
 
 
 # ---------------------------------------------------------------------------
