@@ -1218,6 +1218,7 @@ def cmd_prepare(args: argparse.Namespace) -> None:
 # finalize subcommand
 # ---------------------------------------------------------------------------
 
+REQUIRED_KEYS_V3 = ["hero", "clawProfile", "showcase", "stories", "catchphrases", "skills", "letter"]
 REQUIRED_KEYS_V2 = ["hero", "clawProfile", "showcase", "certification", "portrait", "catchphrases", "diary", "achievements", "letter"]
 REQUIRED_KEYS_V1 = ["heroStats", "effortMap", "showcase", "ownerPortrait", "catchphrases", "diary", "achievements", "letterToOwner"]
 TIER_ORDER = {"legendary": 0, "epic": 1, "rare": 2, "common": 3}
@@ -1292,6 +1293,42 @@ def auto_fix_report(report: dict) -> List[str]:
                 report[new] = {"text": report[new]}
                 fixes.append("letter: converted string → object")
 
+    # v2→v3 migration: move clawProfile.tools → skills.tools, clawProfile.automations → skills.cron
+    cp = report.get("clawProfile", {})
+    if isinstance(cp, dict) and "skills" not in report:
+        tools_data = cp.pop("tools", None)
+        auto_data = cp.pop("automations", None)
+        if tools_data or auto_data:
+            skills_block = {}
+            if tools_data:
+                skills_block["tools"] = tools_data
+            if auto_data:
+                skills_block["cron"] = auto_data
+            report["skills"] = skills_block
+            fixes.append("v2→v3: moved clawProfile.tools/automations → skills block")
+
+    # v2→v3 migration: move certification D/B/O → clawProfile.dimensions
+    cert = report.get("certification", {})
+    if isinstance(cert, dict) and isinstance(cp, dict):
+        if cert.get("dimensionDepth") and not cp.get("dimensions"):
+            signal_ev = cert.get("signalEvidence", {})
+            cp["dimensions"] = {
+                "depth": {"code": cert.get("dimensionDepth", ""), "label": "深度", "evidence": signal_ev.get("depth", "")},
+                "breadth": {"code": cert.get("dimensionBreadth", ""), "label": "广度", "evidence": signal_ev.get("breadth", "")},
+                "orchestration": {"code": cert.get("dimensionOrchestration", ""), "label": "驾驭", "evidence": signal_ev.get("orchestration", "")},
+            }
+            fixes.append("v2→v3: moved certification D/B/O → clawProfile.dimensions")
+
+    # v2→v3 showcase migration: title+what → metric+fact
+    for i, s in enumerate(report.get("showcase") or []):
+        if isinstance(s, dict) and "what" in s and "metric" not in s and "fact" not in s:
+            s["metric"] = s.pop("title", "")
+            s["fact"] = s.pop("what", "")
+            s.pop("soWhat", None)
+            s.pop("evidence", None)
+            s.pop("impactLevel", None)
+            fixes.append(f"showcase[{i}]: v2→v3 converted title/what → metric/fact")
+
     return fixes
 
 
@@ -1329,6 +1366,16 @@ def format_server_errors(error_body: str) -> str:
     return "\n".join(lines)
 
 
+def is_v3_report(report: dict) -> bool:
+    """Detect v3 report by presence of skills block or v3 showcase format."""
+    if "skills" in report:
+        return True
+    showcase = report.get("showcase", [])
+    if showcase and isinstance(showcase[0], dict) and "metric" in showcase[0]:
+        return True
+    return False
+
+
 def is_v2_report(report: dict) -> bool:
     """Detect v2 report by presence of v2-only keys."""
     return "hero" in report or "clawProfile" in report
@@ -1336,9 +1383,127 @@ def is_v2_report(report: dict) -> bool:
 
 def validate_report(report: dict) -> Tuple[List[str], List[str]]:
     """Validate report structure. Returns (errors, warnings)."""
+    if is_v3_report(report):
+        return validate_v3(report)
     if is_v2_report(report):
         return validate_v2(report)
     return validate_v1(report)
+
+
+def validate_v3(report: dict) -> Tuple[List[str], List[str]]:
+    """Validate v3 report structure. Returns (errors, warnings)."""
+    errors: List[str] = []
+    warnings: List[str] = []
+
+    missing = [k for k in REQUIRED_KEYS_V3 if k not in report]
+    if missing:
+        errors.append(f"Missing required keys: {missing}")
+
+    # hero
+    hero = report.get("hero", {})
+    if not hero.get("ownerName"):
+        warnings.append("hero.ownerName is empty")
+    if not hero.get("tagline"):
+        errors.append("hero.tagline is required")
+    hero_stats = hero.get("stats", [])
+    if len(hero_stats) < 3:
+        errors.append(f"hero.stats has {len(hero_stats)} items, need at least 3")
+    headline = hero.get("headline", "")
+    if len(headline) > 20:
+        errors.append(f"hero.headline is {len(headline)} chars, must be <= 20")
+
+    # clawProfile
+    cp = report.get("clawProfile", {})
+    level = cp.get("level", "")
+    if level not in VALID_LEVELS:
+        errors.append(f"clawProfile.level must be L1-L5, got: {level!r}")
+    for field in ("function", "domain", "persona"):
+        val = cp.get(field, "")
+        if not isinstance(val, str) or not val.strip():
+            errors.append(f"clawProfile.{field} must be non-empty string, got: {val!r}")
+    one_liner = cp.get("oneLiner", "")
+    if not isinstance(one_liner, str) or not one_liner.strip():
+        errors.append("clawProfile.oneLiner must be non-empty string")
+
+    # clawProfile.dimensions (D/B/O)
+    dims = cp.get("dimensions", {})
+    if not dims:
+        warnings.append("clawProfile.dimensions is empty (expected D/B/O)")
+    else:
+        valid_dim_codes = {"D1", "D2", "D3", "D4", "D5", "B1", "B2", "B3", "B4", "B5", "O1", "O2", "O3", "O4", "O5"}
+        for dim_key in ("depth", "breadth", "orchestration"):
+            dim = dims.get(dim_key, {})
+            if isinstance(dim, dict):
+                code = dim.get("code", "")
+                if code and code not in valid_dim_codes:
+                    errors.append(f"clawProfile.dimensions.{dim_key}.code invalid: {code!r}")
+            else:
+                warnings.append(f"clawProfile.dimensions.{dim_key} is not an object")
+
+    # showcase (v3 format: metric + domain + fact)
+    showcase = report.get("showcase", [])
+    if len(showcase) < 3:
+        errors.append(f"showcase has {len(showcase)} items, need at least 3")
+    elif len(showcase) > 6:
+        warnings.append(f"showcase has {len(showcase)} items, recommend at most 6")
+    for i, item in enumerate(showcase):
+        if not isinstance(item, dict):
+            errors.append(f"showcase[{i}] must be object")
+            continue
+        if not item.get("metric"):
+            errors.append(f"showcase[{i}] missing metric")
+        if not item.get("fact"):
+            errors.append(f"showcase[{i}] missing fact")
+
+    # stories (1-3)
+    stories = report.get("stories", [])
+    if len(stories) < 1:
+        errors.append("stories must have at least 1 item")
+    elif len(stories) > 3:
+        warnings.append(f"stories has {len(stories)} items, recommend at most 3")
+    for i, story in enumerate(stories):
+        if not story.get("setup"):
+            errors.append(f"stories[{i}] missing setup")
+        if not story.get("turningPoint"):
+            errors.append(f"stories[{i}] missing turningPoint")
+        if not story.get("resolution"):
+            errors.append(f"stories[{i}] missing resolution")
+        owner_quote = story.get("ownerQuote", "")
+        if owner_quote and len(owner_quote) > 80:
+            warnings.append(f"stories[{i}].ownerQuote is {len(owner_quote)} chars, target <= 80")
+
+    # catchphrases
+    catchphrases = report.get("catchphrases", [])
+    if len(catchphrases) < 3:
+        errors.append(f"catchphrases has {len(catchphrases)} items, need at least 3")
+    elif len(catchphrases) > 8:
+        warnings.append(f"catchphrases has {len(catchphrases)} items, recommend at most 8")
+    for i, cp_item in enumerate(catchphrases):
+        if not isinstance(cp_item, dict):
+            errors.append(f"catchphrases[{i}] must be object")
+            continue
+        phrase = cp_item.get("phrase", "")
+        if len(phrase) <= 1:
+            errors.append(f"catchphrases[{i}] is single char: {phrase!r}")
+
+    # skills block
+    skills = report.get("skills", {})
+    tools_list = skills.get("tools", [])
+    if not tools_list:
+        warnings.append("skills.tools is empty")
+    cron_list = skills.get("cron", [])
+
+    # letter
+    letter = report.get("letter", {})
+    letter_text = letter.get("text", "")
+    if not letter_text:
+        errors.append("letter.text is required")
+    if not letter.get("signoff"):
+        warnings.append("letter.signoff is empty")
+
+    # NO checks for portrait, diary, achievements, certification (v3 removed blocks)
+
+    return errors, warnings
 
 
 def validate_v2(report: dict) -> Tuple[List[str], List[str]]:

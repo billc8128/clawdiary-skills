@@ -1,10 +1,10 @@
 ---
 name: clawreport
-description: Read AI conversation history, then generate a shareable ClawDiary report — a Card-first, Report-elaborated field report with structured claw taxonomy, showcase achievements, and certification data.
+description: Read AI conversation history, then generate a shareable ClawDiary report — a Card-first, Report-elaborated field report with structured claw taxonomy, showcase track record, and skills data.
 allowed-tools: Bash, Read, Glob, Grep, Write, AskUserQuestion
 ---
 
-<!-- version: 2.0.0 -->
+<!-- version: 3.0.0 -->
 
 # clawreport
 
@@ -115,16 +115,15 @@ These are the **highest-signal files** — they are deliberately curated content
 
 ### 2b. Read memory logs
 
-Read `_cr_parts/memory_logs.json`. Daily observation logs with real dates. Each entry has `{date, content}`. These map directly to **diary entries with real dates** — the best source for the diary block.
+Read `_cr_parts/memory_logs.json`. Daily observation logs with real dates. Each entry has `{date, content}`. These provide context for stories and other narrative blocks.
 
 ### 2c. Read config & automations
 
 Read `_cr_parts/config.json`. Contains model, tools, plugins, channels info. Feeds directly into:
 - `clawProfile.model` — which AI model
-- `clawProfile.tools` — equipped tools
-- `clawProfile.configHighlight` — interesting configuration details
+- `skills.tools` — equipped tools
 
-Read `_cr_parts/cron.json`. Scheduled automations. Feeds directly into `clawProfile.automations`.
+Read `_cr_parts/cron.json`. Scheduled automations. Feeds directly into `skills.cron`.
 
 ### 2d. Read compressed sessions
 
@@ -143,18 +142,18 @@ Read `_cr_parts/activity.json`, `_cr_parts/tools.json`, and `_cr_parts/routines.
 
 ### 2f. Read extensions (if exists)
 
-If `_cr_parts/extensions.json` exists, read it. Plugin/extension names and descriptions feed into `clawProfile.tools` and `clawProfile.configHighlight`.
+If `_cr_parts/extensions.json` exists, read it. Plugin/extension names and descriptions feed into `skills.tools`.
 
 ### 2g. Read memory search (deep scan only)
 
-If `_cr_parts/memory_search.json` exists, read it. Contains memory chunks from the vector memory database, ordered by recency. Supplementary context for portrait, diary, and catchphrases.
+If `_cr_parts/memory_search.json` exists, read it. Contains memory chunks from the vector memory database, ordered by recency. Supplementary context for stories and catchphrases.
 
 ### 2h. Read existing report (incremental mode)
 
 If `_cr_parts/existing-report.json` exists, read it. This is the previous report. Note:
 - Whether this is a **first-time generation** or **incremental update**
 - What names were used previously (reuse them)
-- What showcase items, diary entries, and achievements already exist
+- What showcase items and stories already exist
 - What the previous claw classification was
 
 **>>> CONTINUE to Step 3 immediately. <<<**
@@ -163,7 +162,7 @@ If `_cr_parts/existing-report.json` exists, read it. This is the previous report
 
 ## Step 3: Generate Report (Single File)
 
-Generate ONE file: `_cr_parts/report.json` containing all 10 blocks.
+Generate ONE file: `_cr_parts/report.json` containing all 7 blocks.
 
 **写入 report.json 时，必须一次性写入完整 JSON。不要分多次 write 同一个文件。**
 
@@ -179,10 +178,8 @@ This way, even if generation is interrupted mid-way, the skeleton provides a val
 ### ⚠️ 字段名必须严格匹配 schema
 
 生成 report.json 时，严格使用本文件和 analysis-prompt.md 中定义的字段名。常见错误：
-- showcase 用 `"what"` 不是 `"description"`
-- portrait.observations 用 `"label"`/`"observation"` 不是 `"theme"`/`"details"`
+- showcase 用 `"metric"` + `"fact"` 不是 `"title"` + `"what"` + `"soWhat"`
 - catchphrases 用 `"clawInterpretation"` 不是 `"soWhat"`
-- diary 用 `"entry"` 不是 `"description"`
 - catchphrases.frequency 必须是**数字**（如 `8`），不是字符串（如 `"high"`）
 
 参考 analysis-prompt.md 末尾的「完整输出示例（字段名参考）」JSON 骨架。
@@ -191,9 +188,9 @@ This way, even if generation is interrupted mid-way, the skeleton provides a val
 
 For quality, generate blocks in this order (but output them all together):
 
-1. **clawProfile** — lock down claw identity first
-2. **hero** + **showcase** + **certification** — card core
-3. **portrait** + **catchphrases** + **diary** + **achievements** + **stories** + **letter** — report narrative
+1. **clawProfile** — lock down claw identity first (with dimensions)
+2. **hero** + **showcase** — owner summary + track record
+3. **stories** + **catchphrases** + **skills** + **letter** — report narrative
 
 ### Name Handling
 
@@ -209,92 +206,53 @@ Write `_cr_parts/report.json` with this structure:
 {
   "hero": {
     "ownerName": "string — from context or [你的名字]",
-    "clawName": "string — AI name/alias",
     "headline": "string — <=20 chars, achievement or certification statement",
     "tagline": "string — one sentence with concrete numbers",
     "stats": [
       { "value": "string", "label": "string" }
-    ],
-    "role": "string? — career label (optional)",
-    "tags": ["string — direction tags for community matching"]
+    ]
   },
 
   "clawProfile": {
+    "clawName": "string — AI name/alias",
+    "level": "L1|L2|L3|L4|L5",
+    "levelLabel": "string — 幼虾|硬壳|铠甲|泰坦|共生",
+    "oneLiner": "string — e.g. 产品策略 · 竞品调研 · 进度追踪 — ...",
     "function": "string — free text: 全栈开发搭子, 数据分析师",
     "domain": "string — free text: 全栈编程, AI + 设计",
     "persona": "string — free text: 毒舌严格型, 冷静温柔的伙伴",
-    "level": "L1|L2|L3|L4|L5",
+    "model": "string? — Claude Opus, GPT-4, etc",
     "functionLabel": "string — short Chinese: 开发搭子",
     "domainLabel": "string — short Chinese: 编程",
     "personaLabel": "string — short Chinese: 毒舌严格",
-    "levelLabel": "string — 泰坦|铠甲|硬壳|幼虾",
-    "oneLiner": "string — e.g. L4 毒舌严格的全栈编程龙虾",
-    "levelEvidence": "string — 1-2 sentences of specific evidence for the level rating",
-    "model": "string? — Claude Opus, GPT-4, etc (optional)",
-    "tools": [
-      {
-        "name": "string — tool/skill name",
-        "icon": "string — emoji icon",
-        "count": "number — usage count",
-        "highlight": "string — one-line description"
-      }
+    "stats": [
+      { "value": "string", "label": "string" }
     ],
-    "automations": [
-      {
-        "name": "string — automation name",
-        "schedule": "string — when it runs",
-        "description": "string — what it does"
-      }
-    ],
-    "configHighlight": "string? — one-liner config highlight (optional)"
+    "dimensions": {
+      "depth": { "code": "D1-D5", "label": "深度", "evidence": "string" },
+      "breadth": { "code": "B1-B5", "label": "广度", "evidence": "string" },
+      "orchestration": { "code": "O1-O5", "label": "驾驭", "evidence": "string" }
+    }
   },
 
   "showcase": [
     {
-      "title": "string — <=28 chars",
-      "what": "string — fact layer",
-      "soWhat": "string — must include comparison/baseline",
-      "evidence": "string? — <=100 chars, owner's words or specific detail",
-      "domain": "string — free text, server maps to standard",
-      "impactLevel": "paradigm|invention|mastery|craft"
+      "metric": "string — e.g. 6 份报告",
+      "domain": "string — e.g. 产品调研",
+      "fact": "string — e.g. 27 天内完成 6 份深度竞品调研报告"
     }
   ],
 
-  "certification": {
-    "sessions": 0,
-    "days": 0,
-    "timespan": "string — e.g. 17 天 or 3 个月",
-    "domains": ["string — 1-3 domain labels"],
-    "depth": "surface|working|deep|symbiotic",
-    "dimensionDepth": "D1|D2|D3|D4|D5",
-    "dimensionBreadth": "B1|B2|B3|B4|B5",
-    "dimensionOrchestration": "O1|O2|O3|O4|O5",
-    "levelDescriptor": "string — 2-3 chars: 深度突出/全面型/广度见长/驾驭力强",
-    "signalEvidence": {
-      "depth": "string — behavioral evidence for depth rating",
-      "breadth": "string — behavioral evidence for breadth rating",
-      "orchestration": "string — behavioral evidence for orchestration rating"
+  "stories": [
+    {
+      "title": "string — 10-20 chars",
+      "setup": "string — scene-setting, 40-80 chars",
+      "turningPoint": "string — conflict/twist, 60-120 chars",
+      "ownerQuote": "string — owner's words at pivotal moment, <=80 chars",
+      "resolution": "string — outcome, 40-80 chars",
+      "reflection": "string — AI insight, guess perspective, 40-60 chars"
     }
-  },
-
-  "portrait": {
-    "observations": [
-      {
-        "type": "capability|style",
-        "label": "string — vivid dimension name",
-        "observation": "string — specific assessment anchored to conversations",
-        "evidence": "string — direct quote from owner",
-        "metric": "string? — quantified anchor (optional)",
-        "clawComment": "string — AI inner monologue, guess perspective"
-      }
-    ],
-    "collaborationStyle": {
-      "level": "string — L1 to L5",
-      "label": "string — e.g. 推翻型",
-      "evidence": "string — 2+ specific quotes from conversations",
-      "description": "string — narrative paragraph describing collaboration pattern"
-    }
-  },
+  ],
 
   "catchphrases": [
     {
@@ -305,39 +263,28 @@ Write `_cr_parts/report.json` with this structure:
     }
   ],
 
-  "diary": [
-    {
-      "date": "string — real date",
-      "type": "breakthrough|milestone|philosophy|relationship|struggle|comedy",
-      "title": "string — short, diary-like",
-      "entry": "string — 80-150 chars with owner quotes"
-    }
-  ],
-
-  "achievements": [
-    {
-      "tier": "legendary|epic|rare|common",
-      "title": "string — game-achievement style",
-      "description": "string — unlock condition with numbers/facts",
-      "capability": "string? — optional capability tag"
-    }
-  ],
-
-  "stories": [
-    {
-      "title": "string — 10-20 chars, intriguing",
-      "setup": "string — scene-setting, 40-80 chars",
-      "turningPoint": "string — conflict/twist, 60-120 chars",
-      "resolution": "string — outcome, 40-80 chars",
-      "reflection": "string — AI insight, guess perspective, 40-60 chars",
-      "ownerQuote": "string — owner's words at pivotal moment, <=80 chars",
-      "dateRange": "string — e.g. '2026-02-15 to 2026-02-18'",
-      "theme": "breakthrough|transformation|persistence|serendipity"
-    }
-  ],
+  "skills": {
+    "subtitle": "string — e.g. 1200 行 SOUL.md · AGENTS.md · 12 条自定义指令",
+    "tools": [
+      {
+        "icon": "string — emoji",
+        "name": "string — tool name",
+        "count": 0,
+        "highlight": "string — one-line AI-written description",
+        "featured": true
+      }
+    ],
+    "cron": [
+      {
+        "schedule": "string — e.g. 每日 09:00",
+        "name": "string — job name",
+        "description": "string — what it does"
+      }
+    ]
+  },
 
   "letter": {
-    "text": "string — 100-200 字 (Chinese characters)",
+    "text": "string — 100-200 字",
     "signoff": "string — signature + status line",
     "mood": "reflective|grateful|wry|bittersweet"
   }
@@ -356,13 +303,10 @@ If `_cr_parts/existing-report.json` exists, merge the new data with the existing
 | `hero.stats` | Accumulate numeric values (sessions, days); replace ratio-based values |
 | `clawProfile.level` | Only goes up, never down |
 | `clawProfile.function/domain/persona` | May adjust based on new evidence |
-| `showcase` | Merge, dedup by title similarity, sort by impactLevel, keep top 5 |
-| `certification` | sessions/days accumulate; depth only goes up |
-| `portrait.observations` | Merge, keep most insightful 2-4 |
+| `showcase` | Merge, dedup by metric similarity, sort by brag value, keep top 6 |
 | `catchphrases` | Merge, accumulate frequency, re-sort by frequency DESC |
-| `diary` | Append new entries only; never modify old entries |
-| `achievements` | Append new entries only |
-| `stories` | Replace entirely — story should reflect the most compelling arc from all data |
+| `stories` | Replace entirely — stories should reflect the most compelling arcs from all data |
+| `skills` | Replace entirely — reflects current toolbox state |
 | `letter` | Completely rewrite (reflects latest relationship state) |
 
 ---
@@ -445,106 +389,47 @@ oneLiner — 组合三维度 + 等级:
 The 3-second layer — grab attention instantly.
 
 - `ownerName`: Owner's name/nickname from conversation. `[OWNER]` if undetermined.
-- `clawName`: AI assistant's name/alias from conversation.
 - `headline`: <=20 chars. Must make the reader want to click.
 - `tagline`: One sentence that makes non-tech people say "wait what." Must contain concrete numbers or outcomes.
-- `stats`: 3-4 impressive numbers. Prioritize outcome numbers (products shipped, problems solved, speed) over activity numbers (sessions, days).
-- `role`: Career label (optional). Infer from conversation.
-- `tags`: 3-6 direction tags for community matching.
+- `stats`: 3-4 owner-level aggregate numbers (total messages, active days, total tokens, claw count). Prioritize outcome numbers over activity numbers.
 
 #### 2. clawProfile
 
 The claw's identity card — who is this AI assistant?
 
+- `clawName`: AI assistant's name/alias from conversation.
 - `function/domain/persona/level`: See Claw Classification Guide above.
-- `levelEvidence`: 1-2 sentences explaining why this level was assigned, citing specific behaviors.
 - `model`: Which AI model (Claude, GPT-4, etc). Optional.
-- `tools`: Top 5 tools/capabilities the claw demonstrated.
-- `automations`: Autonomous tasks configured by the owner (cron jobs, scheduled tasks). Empty array if none. Read from `_cr_parts/routines.json`.
-- `configHighlight`: One-liner describing the most distinctive configuration. Optional.
+- `stats`: 3-4 claw-level numbers (messages with this claw, active days, tokens, skills used).
+- `dimensions`: Object with `depth`, `breadth`, `orchestration`. Each has `code` (D1-D5/B1-B5/O1-O5), `label` (深度/广度/驾驭), and `evidence` (one sentence citing specific behavioral evidence from conversations). Moved from certification block.
 
-#### 3. showcase (Core Brag Zone)
+#### 3. showcase (Track Record)
 
-**The most critical block in the entire report.** 3-5 items, sorted by brag value.
+**The most critical block in the entire report.** 3-6 items, sorted by brag value.
 
 Each item:
-- `title`: <=28 chars, punchy headline
-- `what`: Fact layer — what was done
-- `soWhat`: **Dimensionality reduction** — translate technical achievement into something anyone at a dinner table would find impressive
-- `evidence`: Owner's actual words or specific details. <=100 chars.
-- `domain`: Domain tag (free text, server normalizes later)
-- `impactLevel`: `paradigm` (changed the game) > `invention` (created something new) > `mastery` (extreme craft) > `craft` (high-quality execution)
+- `metric`: Quantified outcome — "6 份报告", "3 个产品", "12 个页面"
+- `domain`: Domain label — "产品调研", "全栈开发", "数据分析"
+- `fact`: One-sentence description of what was done — "27 天内完成 6 份深度竞品调研报告"
 
-**`soWhat` rules — Style B: Evidence + Credible Anchor (most important):**
+#### 4. stories
 
-Every soWhat must be evidence-first with at least one credible anchor type:
-1. **Structural anchor:** Feature/component enumeration — "包含 OAuth + 支付 + 实时通知的生产系统"
-2. **Process anchor:** Iteration/domain-crossing depth — "经过4轮方案推翻" / "跨前端/后端/运维三域"
-3. **Output anchor:** Countable deliverables — "产出5个页面 + 3套组件，覆盖获客到留存完整链路"
+1-3 narrative arcs with full structure.
 
-Formula: `soWhat = [规模/范围量化] + [复杂度证据] + [产出具体化]`
-
-- No jargon — a non-tech person must be able to say wow
-- ✅ "从零搭建了包含 OAuth + 实时通知 + 支付集成的生产系统，覆盖前端/后端/运维三个技术域"
-- ✅ "在4轮假设-验证循环后定位到竞态条件根因，修复涉及3个服务的事务边界"
-- ✅ "对12万条用户行为数据做了留存分析 + 漏斗归因 + A/B测试设计，产出3条可执行的优化建议"
-- ❌ "一个人完成了一般需要3-5人团队的基础设施搭建"（跟虚构团队比较）
-- ❌ "连大厂都没做到"（哪个大厂？不可验证）
-- ❌ "效率提升300%"（怎么测的？基线是什么？）
-
-Forbidden in soWhat:
-- Comparisons to imaginary people/teams/timelines
-- Unverifiable superlatives ("第一个", "连XX都", "史无前例")
-- Power words substituting for evidence ("颠覆性", "降维打击")
-
-#### 4. certification
-
-Trust metrics — verifiable usage data + behavioral evaluation.
-
-- `sessions`: Total session count (from activity data)
-- `days`: Total active days
-- `timespan`: Human-readable timespan ("17 天" or "3 个月")
-- `domains`: 1-3 primary domain labels
-- `depth`: `surface` (casual use) | `working` (regular reliance) | `deep` (integrated into workflow) | `symbiotic` (AI anticipates needs)
-- `dimensionDepth`: D1-D5 — how deep the owner goes in their primary domain
-- `dimensionBreadth`: B1-B5 — how many domains the owner crosses
-- `dimensionOrchestration`: O1-O5 — how the owner drives the AI
-- `levelDescriptor`: 2-3 char Chinese descriptor ("深度突出" / "全面型" / "广度见长" / "驾驭力强")
-- `signalEvidence`: Object with `depth`, `breadth`, `orchestration` — one sentence each citing specific behavioral evidence from conversations
-
-#### 5. portrait
-
-The depth layer — what makes this owner tick.
-
-**observations** (2-4 items):
-- `type`: `capability` (impressive ability) or `style` (entertaining personal trait)
-- `label`: Vivid, specific dimension name. "从'差不多'到'对了'" beats "审美偏好".
-- `observation`: Specific assessment, anchored to conversation content. Must be positive or neutral.
-- `evidence`: Direct quote from owner. Must be actual words, not paraphrase.
-- `metric`: Quantified anchor (optional, e.g. "3轮迭代修1个分隔符").
-- `clawComment`: AI's inner monologue — guess perspective, can be witty, reflective, or uncertain.
+- `title`: 10-20 chars, curiosity-inducing
+- `setup`: Scene-setting (40-80 chars) — what project, what stage
+- `turningPoint`: The conflict/obstacle/unexpected decision (60-120 chars). This is the story's core — no tension = no story
+- `ownerQuote`: Owner's actual words at the pivotal moment (<=80 chars)
+- `resolution`: How it resolved, what was built/shipped (40-80 chars)
+- `reflection`: AI's non-obvious insight in guess perspective (40-60 chars)
 
 Hard rules:
-- >=1 `capability` + >=1 `style` (minimum)
-- `capability` dimensions showcase impressive abilities (technical judgment, learning speed, problem decomposition, aesthetic taste)
-- `style` dimensions showcase entertaining personal traits (communication style, decision patterns, emotional expression)
-- ❌ No weakness/defect dimensions — this is a brag report, not a psych eval
-- ❌ No duplicate dimensions covering the same trait
+- 1-3 stories (at least one required)
+- Each must have title/setup/turningPoint/resolution
+- Must be self-contained (readable without other report context)
+- Do not duplicate showcase content — the story adds depth to a different moment
 
-**collaborationStyle**:
-- `level`: String `"L1"` to `"L5"`. Same scale as clawProfile but describes the owner's collaboration behavior.
-- `label`: Chinese label (推翻型, 质疑型, etc)
-- `evidence`: 2+ specific quotes demonstrating the collaboration pattern
-- `description`: Narrative paragraph describing how the owner works with AI
-
-```
-L1-L2 — 接受/纠错型：AI 说什么就是什么，或发现错误要求修正 (70%)
-L3 — 质疑型：追问为什么，不满足表面答案 (20%)
-L4 — 推翻型：否定方向，要求重新思考 (7%)
-L5 — 升维型：跳出框架，改变问题本身 (3%)
-```
-
-#### 6. catchphrases
+#### 5. catchphrases
 
 3-8 of the owner's most distinctive high-frequency expressions.
 
@@ -563,71 +448,23 @@ L5 — 升维型：跳出框架，改变问题本身 (3%)
 - ✅ Phrases reflecting personality or decision patterns
 - ✅ Interpretations that reveal the impressive side, not just the funny side
 
-#### 7. diary
+#### 6. skills
 
-5-7 curated diary entries from the observer's perspective.
+The claw's toolbox — what tools and automations are equipped.
 
-Each entry:
-- `date`: Real date from conversation
-- `type`: `breakthrough` | `milestone` | `philosophy` | `relationship` | `struggle` | `comedy`
-- `title`: Short, diary-like title. Like a journal heading, not a news headline.
-  - ✅ "他说'先这样'的时候其实已经想好了下一步"
-  - ❌ "高效的一天"
-- `entry`: 80-150 chars. Must include:
-  - Specific scene (what project, what feature)
-  - Owner's actual words (direct quote with quotation marks)
-  - Observer's insight (your unique AI perspective)
-  - A small epiphany or twist
+- `subtitle`: Summarize the owner's **harness design** — the structure they built to control and shape this claw. List the key definition files and their scale. E.g. "1200 行 SOUL.md · AGENTS.md · 12 条自定义指令". What counts as harness: SOUL.md (personality definition), USER.md (user profile), AGENTS.md (operational instructions), MEMORY.md (curated memory), IDENTITY.md, TOOLS.md, custom instructions, heartbeat definitions. Show file names + line counts or entry counts where available. This is NOT about technical infrastructure (MCP servers, plugins) — it's about the human's investment in designing the AI's behavior architecture.
+- `tools[]`: From `_cr_parts/tools.json`. Each has:
+  - `icon`: Emoji icon
+  - `name`: Tool name
+  - `count`: Usage count
+  - `highlight`: One-line AI-written description of how the tool was used
+  - `featured`: Boolean — top 2-3 tools are `true`
+- `cron[]`: From `_cr_parts/cron.json`. Each has:
+  - `schedule`: When it runs (e.g. "每日 09:00")
+  - `name`: Job name
+  - `description`: What it does
 
-Hard rules:
-- >=3 entries must be `breakthrough` or `milestone` — show concrete outcomes
-- `relationship` type limited to 1-2 entries
-- `comedy` entries limited to 1-2 — AI misunderstandings, funny failures. The AI looks silly, not the owner.
-- Every entry must contain at least one owner quote
-- 5 entries must cover >=3 different dates
-- Entry length >=80 chars — narrative feel, not bullet points
-
-#### 8. achievements
-
-5-8 tiered achievements, game-style.
-
-- `tier`: `legendary` (gold) | `epic` (purple) | `rare` (blue) | `common` (gray)
-- `title`: Game achievement name — must have visual impact
-  - ✅ "一人军团", "凌晨三点的建筑师", "需求粉碎机"
-  - ❌ "高效开发者", "好学者"
-- `description`: Unlock condition — use specific numbers or facts
-  - ✅ "单日完成 3 个独立功能模块的开发与部署"
-  - ❌ "工作很努力"
-- `capability`: Optional capability tag for indexing
-
-Hard rules:
-- **Sorted by tier DESC**: legendary -> epic -> rare -> common
-- First 3 must be `legendary` or `epic`, outcome-oriented (what was achieved, not how long it took)
-- Remaining can be `rare` or `common`, behavior-based or humorous (contrast is stronger)
-- legendary: 1-2 (scarcity = value), epic: 2-3, rare: 1-2, common: 1-2
-- ❌ No all-legendary/epic (inflation)
-- ❌ No all-common (boring)
-
-#### 9. stories (optional)
-
-0-1 narrative arc with full structure. Only generate if the data supports a genuine story with tension.
-
-- `title`: 10-20 chars, curiosity-inducing
-- `setup`: Scene-setting (40-80 chars) — what project, what stage
-- `turningPoint`: The conflict/obstacle/unexpected decision (60-120 chars). This is the story's core — no tension = no story
-- `resolution`: How it resolved, what was built/shipped (40-80 chars)
-- `reflection`: AI's non-obvious insight in guess perspective (40-60 chars)
-- `ownerQuote`: Owner's actual words at the pivotal moment (<=80 chars)
-- `dateRange`: Time span of the story
-- `theme`: `breakthrough` | `transformation` | `persistence` | `serendipity`
-
-Hard rules:
-- **Optional** — if no genuine narrative arc exists, omit entirely. An empty array is fine.
-- Cap at 1 story (scarcity = weight)
-- Must be self-contained (readable without other report context)
-- Do not duplicate showcase or diary content — the story adds depth to a different moment
-
-#### 10. letter
+#### 7. letter
 
 A letter from the observer to the owner.
 
@@ -680,17 +517,17 @@ The CLI uploads reports as **drafts** by default. The output will show:
 
 **Exit code 1 — validation failed.** Read `_cr_parts/validation_errors.json`, fix `report.json`, and run finalize again.
 
-**Exit code 2 — upload failed.** The CLI will show grouped error details with hints. Common cause: AI generated wrong field names (e.g. `description` instead of `entry`).
+**Exit code 2 — upload failed.** The CLI will show grouped error details with hints. Common cause: AI generated wrong field names (e.g. `title` instead of `metric` in showcase).
 
 ### Present to user
 
 Show a text summary in the terminal:
 1. **Hero** — headline + tagline + key numbers
-2. **Claw Profile** — oneLiner + level evidence
-3. **Top Showcase** — best 1-2 soWhat translations
-4. **Portrait** — collaboration level + top observation
+2. **Claw Profile** — clawName + oneLiner + D/B/O
+3. **Top Showcase** — best 2-3 items (metric + fact)
+4. **Top Stories** — 1 best story title
 5. **Top Catchphrases** — the best 2-3
-6. **Diary Highlight** — 1 best entry
+6. **Skills summary** — featured tools count + cron count
 
 Then:
 
@@ -715,21 +552,15 @@ If the user wants changes, apply them to `report.json`, re-upload via finalize, 
 |------|-------------|
 | `hero.headline` | <=20 chars, achievement or certification statement |
 | `hero.tagline` | Must contain concrete numbers/outcomes |
-| `showcase` | 3-5 items, `soWhat` must use credible anchors (structural/process/output), no imaginary comparisons, jargon-free |
-| `portrait.observations` | 2-4 items, >=1 capability + >=1 style, no weakness dimensions, no duplicates |
-| `portrait.collaborationStyle.level` | String `"L1"` to `"L5"`, evidence with >=2 specific quotes |
+| `showcase` | 3-6 items, each with `metric` + `domain` + `fact` |
 | `clawProfile.level` | Must be `L1`-`L5` |
 | `clawProfile.function/domain/persona` | Non-empty strings |
 | `clawProfile.oneLiner` | Non-empty |
-| `certification.depth` | `surface` / `working` / `deep` / `symbiotic` |
-| `certification.dimensionDepth/Breadth/Orchestration` | D1-D5 / B1-B5 / O1-O5 + signalEvidence with behavioral citations |
+| `clawProfile.dimensions` | depth/breadth/orchestration with code + evidence |
 | `catchphrases` | 3-8 items, no single punctuation, no generic words, guess-perspective interpretation |
-| `diary` | 5-7 entries, >=3 breakthrough/milestone, >=3 different dates, each 80-150 chars |
-| `achievements` | 5-8 items, sorted tier DESC, first 3 legendary/epic + outcome-oriented |
+| `stories` | 1-3 items. Must have title/setup/turningPoint/resolution. Self-contained. |
+| `skills.tools` | Non-empty array, top 2-3 marked `featured: true` |
 | `letter.text` | 100-200 字, must reference showcase, has `mood` field, personalized `signoff` |
-| `stories` | 0-1 items, optional. Must have setup/turningPoint/resolution. Self-contained. |
-| `letter.text` | 80-150 words (shortened), must reference showcase, has `mood` field |
-| `diary.type` | Added `comedy` — AI mistakes/funny failures, max 1-2 of this type |
 
 ---
 
@@ -752,28 +583,25 @@ After generating `report.json`, run these checks internally. Fix any violations 
 
 1. `hero.headline` <=20 chars? Has impact?
 2. `hero.tagline` contains concrete numbers?
-3. `clawProfile.level` is L1-L5? `oneLiner` non-empty?
-4. `showcase` has 3-5 items? Every `soWhat` has comparison/baseline?
-5. `certification.depth` is one of surface/working/deep/symbiotic?
-6. `portrait.observations` has 2-4 items, >=1 capability, >=1 style?
-7. `portrait.collaborationStyle.level` is "L1"-"L5" string? Evidence has >=2 quotes?
-8. `catchphrases` has 3-8 items? No single punctuation? No generic words?
-9. `diary` has 5-7 entries? >=3 breakthrough/milestone? >=3 dates? Each 80-150 chars?
-10. `achievements` has 5-8 items? Sorted tier DESC? First 3 legendary/epic?
-11. `letter.text` references a specific showcase achievement?
-12. All `evidence` fields <=100 chars?
-13. `stories` — if present, has setup + turningPoint + resolution? ownerQuote <=80 chars? Is it self-contained?
-14. `letter.text` 100-200 字? Has `mood` field?
+3. `clawProfile.level` is L1-L5? `oneLiner` non-empty? `clawName` non-empty?
+4. `clawProfile.dimensions` has depth/breadth/orchestration with code + evidence?
+5. `showcase` has 3-6 items? Each has `metric` + `domain` + `fact`?
+6. `catchphrases` has 3-8 items? No single punctuation? No generic words?
+7. `stories` has 1-3 items? Each has setup + turningPoint + resolution? ownerQuote <=80 chars? Self-contained?
+8. `skills.tools` non-empty? Top 2-3 marked `featured: true`?
+9. `letter.text` references a specific showcase achievement?
+10. `letter.text` 100-200 字? Has `mood` field?
+11. All `evidence` fields <=100 chars?
 
 ### Content Quality Checks
 
 1. **炫耀测试:** 看完 showcase + hero 会不会想截图发群？
-2. **饭桌测试:** 每个 soWhat 念给非技术人听，他们会不会说 wow？（用证据说服，不靠修辞忽悠）
+2. **饭桌测试:** 每个 showcase fact 念给非技术人听，他们会不会说 wow？（用证据说服，不靠修辞忽悠）
 3. **换人测试:** 把报告给别人看，会不会觉得不对——细节只属于这个人？
 4. **原文测试:** 去掉所有引文，报告还能成立吗？（不能 = 好，原话是骨架不是装饰）
 5. **AI 味测试:** 大声读一遍。任何 ChatGPT 味的句子删掉重写。
 6. **比例测试:** impressive vs entertaining = 70:30
 7. **温度测试:** 吐槽的部分主人看了会不会不舒服？佩服的部分会不会觉得假？
-8. **弱点测试:** observations 里有没有把缺陷当维度？这是炫耀报告，不是心理评估。
+8. **弱点测试:** 报告里有没有把缺陷当维度？这是炫耀报告，不是心理评估。
 9. **冲突测试:** stories 的 turningPoint 能不能指出具体的"卡点"？如果故事是"我们做了X然后成功了"，删掉重写
 10. **群聊测试:** share_intro.txt 粘到群里，不知道 ClawDiary 的人也觉得有趣吗？
