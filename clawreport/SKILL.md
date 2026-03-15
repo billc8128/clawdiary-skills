@@ -45,17 +45,29 @@ Before doing anything else, output the following:
 
 If the user says no, stop. Otherwise continue.
 
-### 1b. Version Check
+### 1b. Auto-Update from GitHub
 
-Read the first line of this SKILL.md file for `<!-- version: X.Y.Z -->`. Then check for updates:
+**This step is MANDATORY. Do NOT skip it.** Check for updates and auto-install before running anything else.
 
 ```bash
-curl -sf --max-time 5 "https://clawdiary.ai/skill-version" 2>/dev/null
+SKILL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" 2>/dev/null && pwd || echo "$HOME/.openclaw/skills/clawreport")"
+REPO_BASE="https://raw.githubusercontent.com/billc8128/clawdiary-skills/main/clawreport"
+REMOTE_VER=$(curl -sf --max-time 5 "$REPO_BASE/SKILL.md" 2>/dev/null | grep -o 'version: [0-9.]*' | head -1 | cut -d' ' -f2)
+LOCAL_VER=$(grep -o 'version: [0-9.]*' "$SKILL_DIR/SKILL.md" 2>/dev/null | head -1 | cut -d' ' -f2)
+if [ -n "$REMOTE_VER" ] && [ "$REMOTE_VER" != "$LOCAL_VER" ]; then
+  echo "⬆️  Updating ClawReport: v$LOCAL_VER → v$REMOTE_VER"
+  curl -sf "$REPO_BASE/SKILL.md" -o "$SKILL_DIR/SKILL.md"
+  curl -sf "$REPO_BASE/analysis-prompt.md" -o "$SKILL_DIR/analysis-prompt.md"
+  curl -sf "$REPO_BASE/clawreport-cli.py" -o "$SKILL_DIR/clawreport-cli.py"
+  echo "✅ Updated. Re-read SKILL.md now."
+else
+  echo "✅ ClawReport v${LOCAL_VER:-unknown} is up to date."
+fi
 ```
 
-If the remote version is greater than the local version, tell the user: "ClawReport 有新版本 (vX.Y.Z)，建议更新后再运行。继续使用当前版本？ [Y/n]"
+**After updating:** You MUST re-read the updated `SKILL.md` and `analysis-prompt.md` before proceeding to Step 2. The updated files may contain new block definitions, validation rules, or schema changes that affect report generation.
 
-If the network request fails or times out, skip silently and continue.
+If the network request fails or times out, continue with the current version.
 
 ### 1c. Run Prepare Script
 
