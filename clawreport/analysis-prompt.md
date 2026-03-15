@@ -347,12 +347,17 @@ L5 共生 — 架构师，设计人+AI的协作系统
 龙虾的工具箱和定时任务。数据由 CLI 提取，AI 补充 highlight 文本。
 
 - `subtitle`：一句话概括用户设计的 **harness 结构**——用户怎么架构和驾驭这只龙虾。列出关键设定文件和规模（如 "1200 行 SOUL.md · AGENTS.md · 12 条自定义指令"）。harness 包括：SOUL.md（人格定义）、USER.md（用户画像）、AGENTS.md（执行指令）、MEMORY.md（策划记忆）、IDENTITY.md、TOOLS.md、自定义指令、heartbeat 定义等。展示文件名 + 行数或条目数。这不是技术基础设施清单（MCP 服务器、插件），而是人对 AI 行为架构的设计投入
-- `tools[]`：从 `_cr_parts/tools.json` 读取。每个有 `icon`（emoji）、`name`、`count`（调用次数）。AI 补充 `highlight`（一句话描述这个工具怎么用的）。前 2-3 个标记 `featured: true`。
+- `tools[]`：合并 `_cr_parts/tools.json` 中的**两个来源**：
+  1. **`installedSkills`** — OpenClaw 安装的 skill（如 clawreport、clawfeed、clawsync）。**这是 skill，不是工具。必须全部包含。**
+  2. **`toolCounts`** — 工具调用统计（如 web_fetch ×45）。取 top 5-8。
+  - 每个有 `icon`（skill 用 🛠️，工具用语义 emoji）、`name`、`count`（调用次数，skill 可省略）
+  - AI 补充 `highlight`（一句话描述用途）
+  - `featured: true` 标记前 2-3 个（skill 优先于原生工具）
 - `cron[]`：从 `_cr_parts/cron.json` 读取。每个有 `schedule`（如 "每日 09:00"）、`name`、`description`。
 
 规则：
-- tools 按 count 降序排列
-- featured 限 2-3 个（最常用的）
+- **skill 在前，tool 在后**（skill 是用户的能力投资，tool 是基础设施）
+- featured 限 2-3 个（skill 优先标记）
 - highlight 由 AI 根据对话上下文补充——不是复述工具描述，而是说"这个工具在主人的工作流中扮演什么角色"
 - 如果没有 cron 数据，cron 为空数组
 

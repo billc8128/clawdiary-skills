@@ -475,12 +475,15 @@ Hard rules:
 The claw's toolbox — what tools and automations are equipped.
 
 - `subtitle`: Summarize the owner's **harness design** — the structure they built to control and shape this claw. List the key definition files and their scale. E.g. "1200 行 SOUL.md · AGENTS.md · 12 条自定义指令". What counts as harness: SOUL.md (personality definition), USER.md (user profile), AGENTS.md (operational instructions), MEMORY.md (curated memory), IDENTITY.md, TOOLS.md, custom instructions, heartbeat definitions. Show file names + line counts or entry counts where available. This is NOT about technical infrastructure (MCP servers, plugins) — it's about the human's investment in designing the AI's behavior architecture.
-- `tools[]`: From `_cr_parts/tools.json`. Each has:
-  - `icon`: Emoji icon
-  - `name`: Tool name
-  - `count`: Usage count
-  - `highlight`: One-line AI-written description of how the tool was used
-  - `featured`: Boolean — top 2-3 tools are `true`
+- `tools[]`: Combine TWO sources from `_cr_parts/tools.json`:
+  1. **`installedSkills`** — OpenClaw skills (e.g. clawreport, clawfeed). These are SKILLS, not tools. Include ALL of them.
+  2. **`toolCounts`** — Tool usage stats (e.g. web_fetch ×45). Include top 5-8 by count.
+  - Each entry has:
+  - `icon`: Emoji icon (🛠️ for skills, contextual emoji for tools)
+  - `name`: Skill/tool name
+  - `count`: Usage count (for skills, use total invocations if known, otherwise omit)
+  - `highlight`: One-line AI-written description of what it does and how the owner uses it
+  - `featured`: Boolean — top 2-3 are `true` (skills should be featured over raw tools)
 - `cron[]`: From `_cr_parts/cron.json`. Each has:
   - `schedule`: When it runs (e.g. "每日 09:00")
   - `name`: Job name
