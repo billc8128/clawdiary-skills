@@ -389,9 +389,19 @@ oneLiner — 组合三维度 + 等级:
 The 3-second layer — grab attention instantly.
 
 - `ownerName`: Owner's name/nickname from conversation. `[OWNER]` if undetermined.
-- `headline`: <=20 chars. Must make the reader want to click.
-- `tagline`: One sentence that makes non-tech people say "wait what." Must contain concrete numbers or outcomes.
-- `stats`: 3-4 owner-level aggregate numbers (total messages, active days, total tokens, claw count). Prioritize outcome numbers over activity numbers.
+- `headline`: **<=20 chars, HARD LIMIT.** One phrase, no `×` joins, no `+` joins. Must be a single coherent statement.
+  - ✅ "用 AI 做产品的人" (9 chars)
+  - ✅ "72小时从零到上线" (8 chars)
+  - ❌ "AI产品领袖 × 极致完美主义者" (too long, × join)
+  - ❌ "全栈开发者 + 产品经理" (× join, generic)
+- `tagline`: One sentence with concrete numbers. <=60 chars.
+- `stats`: **EXACTLY 4 items, fixed structure.** Values must be SHORT (number only, <=6 chars). Labels must be SHORT (<=6 chars).
+  - Item 1: total messages across all claws → `{"value": "3,847", "label": "消息"}`
+  - Item 2: active days → `{"value": "127", "label": "天"}`
+  - Item 3: total tokens (use K/M/B suffix) → `{"value": "21.4M", "label": "TOKENS"}`
+  - Item 4: claw count → `{"value": "3", "label": "龙虾"}`
+  - ❌ `{"value": "14.0小时/天", "label": "活跃时长"}` — value too long, contains units
+  - ❌ `{"value": "6个/周", "label": "产品发现"}` — not one of the 4 fixed dimensions
 
 #### 2. clawProfile
 
@@ -550,8 +560,9 @@ If the user wants changes, apply them to `report.json`, re-upload via finalize, 
 
 | Rule | Requirement |
 |------|-------------|
-| `hero.headline` | <=20 chars, achievement or certification statement |
-| `hero.tagline` | Must contain concrete numbers/outcomes |
+| `hero.headline` | <=20 chars, NO `×`/`+` joins, single coherent statement |
+| `hero.tagline` | Must contain concrete numbers/outcomes, <=60 chars |
+| `hero.stats` | EXACTLY 4 items: 消息/天/TOKENS/龙虾. Values <=6 chars, no units in value |
 | `showcase` | 3-6 items, each with `metric` + `domain` + `fact` |
 | `clawProfile.level` | Must be `L1`-`L5` |
 | `clawProfile.function/domain/persona` | Non-empty strings |

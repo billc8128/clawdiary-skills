@@ -1405,12 +1405,24 @@ def validate_v3(report: dict) -> Tuple[List[str], List[str]]:
         warnings.append("hero.ownerName is empty")
     if not hero.get("tagline"):
         errors.append("hero.tagline is required")
-    hero_stats = hero.get("stats", [])
-    if len(hero_stats) < 3:
-        errors.append(f"hero.stats has {len(hero_stats)} items, need at least 3")
     headline = hero.get("headline", "")
     if len(headline) > 20:
         errors.append(f"hero.headline is {len(headline)} chars, must be <= 20")
+    if "×" in headline or "✕" in headline or " x " in headline.lower():
+        errors.append(f"hero.headline must not use × joins: {headline!r}")
+    hero_stats = hero.get("stats", [])
+    if len(hero_stats) != 4:
+        errors.append(f"hero.stats must have exactly 4 items, got {len(hero_stats)}")
+    VALID_STAT_LABELS = {"消息", "天", "TOKENS", "tokens", "龙虾"}
+    for i, st in enumerate(hero_stats):
+        if not isinstance(st, dict):
+            continue
+        val = st.get("value", "")
+        if len(val) > 6:
+            errors.append(f"hero.stats[{i}].value too long ({len(val)} chars): {val!r}. Must be <=6 chars (e.g. '3,847', '21.4M')")
+        lbl = st.get("label", "")
+        if lbl not in VALID_STAT_LABELS:
+            warnings.append(f"hero.stats[{i}].label={lbl!r} is not standard (expected: 消息/天/TOKENS/龙虾)")
 
     # clawProfile
     cp = report.get("clawProfile", {})
