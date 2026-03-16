@@ -93,8 +93,11 @@ Schema and hard constraints are in SKILL.md. Below is craft guidance — what ma
 
 - Order by impact (most impressive first)
 - Each item covers a different domain (no repeats)
-- `metric` always has a number ("6 份报告", "3 个产品")
+- `metric` always has a number — **prefer impressive numbers**. If individual numbers are too small (1, 2), combine related work into a bigger story. "14 个自动化任务" beats "1 份决策文档". "3 套完整产品" beats "1 套架构方案"
+- `fact` is the **降维打击 layer**: translate the achievement for non-technical people. "一个人用 AI 完成了通常 3-5 人团队的工作" > "完成了 tldraw 技术选型报告"
 - `fact` is one sentence, <=50 chars, concrete with numbers and scope
+- **炫耀测试**: Would the owner screenshot this item and share on social media? If a showcase item would not impress someone outside the owner's field, rewrite it or replace it with something more macro
+- **Minimum bar**: Every item should sound impressive to anyone, not just domain experts. Prefer larger numbers, time spans, or scope indicators
 
 ### stories
 
@@ -106,10 +109,12 @@ Schema and hard constraints are in SKILL.md. Below is craft guidance — what ma
 
 ### catchphrases
 
+- **DO NOT summarize or synthesize. Copy-paste the owner's EXACT words ONLY.** If you cannot locate the exact line in session data, do not include it.
 - Pick expressions that are **uniquely this person** — hearing it, you'd know who said it
+- Catchphrases should be **SHORT** (2-8 characters typical). If your phrase is longer than 10 characters, it's almost certainly a paraphrase — go back and find the real short expression
 - `clawInterpretation` uses guess perspective and should reveal something impressive, not just be funny
 - Consider: some "？" messages may be connectivity tests, not questions (early platform instability)
-- Exclude: single punctuation, generic words (ok/好的/嗯/gkd), pure functional commands
+- Exclude: single punctuation, generic words (ok/好的/嗯/gkd), pure functional commands, concept labels you invented, English translations of Chinese phrases
 
 ### skills
 

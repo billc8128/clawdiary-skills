@@ -4,7 +4,7 @@ description: Read AI conversation history, then generate a shareable ClawDiary r
 allowed-tools: Bash, Read, Glob, Grep, Write, AskUserQuestion
 ---
 
-<!-- version: 3.1.1 -->
+<!-- version: 3.1.2 -->
 
 # clawdiary
 
@@ -119,6 +119,8 @@ If `_cr_parts/owner-summary.json` exists, use it for `hero.stats`:
 
 This file contains **owner-level aggregated data across ALL claws**, not just the current one. hero.stats must reflect the owner's total, not just this claw's numbers.
 
+**Data accuracy:** If `_cr_parts/activity.json` has a `totalTokens` significantly larger than `owner-summary.json`, the activity data is more accurate (freshly computed from session files). Use the larger value. This applies to all numeric fields — prefer the fresher, larger number when there is a discrepancy.
+
 ### 2g. Read existing report (incremental mode)
 
 If `_cr_parts/existing-report.json` exists, note names, showcase items, stories, classification. See analysis-prompt.md § Incremental for merge rules.
@@ -207,22 +209,36 @@ Generation order: **clawProfile** → **hero + showcase** → **stories + catchp
 | `clawProfile.stats` | **Exactly 4**: 消息/天/TOKENS/SKILLS. Claw-level (this claw only). Values <=6 chars, no units. |
 | `clawProfile.persona` | Must have personality contrast or tension ("毒舌但高效"). NOT bland labels ("严格辩证", "认真负责"). |
 | `clawProfile.dimensions` | depth/breadth/orchestration each with code + evidence citing specific behavior. |
-| `showcase` | 3-6 items. `metric` has number. `fact` <=50 chars. Different domains. |
+| `showcase` | 3-6 items. `metric` has number (prefer impressive numbers — combine related work if individual numbers are too small). `fact` <=50 chars, must be the 降维打击 layer: translate for non-technical people. Different domains. Each item must pass the 炫耀测试: would the owner screenshot this? |
 | `stories` | 1-3 items. Must have turningPoint + ownerQuote. Self-contained. |
-| `catchphrases` | 3-8 items. **`phrase` = owner's EXACT verbatim words copied from conversation** (NOT paraphrased concepts). No single punctuation (？。!). No generic words (ok/好的/嗯). `frequency` = number. See § Catchphrase Rules. |
+| `catchphrases` | 3-8 items. **`phrase` = owner's EXACT verbatim words copied from conversation** (NOT paraphrased concepts). Typical length 2-8 characters. If >10 characters, it's probably a paraphrase — verify. No single punctuation (？。!). No generic words (ok/好的/嗯). `frequency` = number. See § Catchphrase Rules. |
 | `skills` | See § Skills Block Assembly below. |
 | `letter.text` | 100-200 字. Must reference a specific showcase achievement. |
 
 ### Catchphrase Rules
 
-`phrase` must be the owner's **EXACT verbatim words** as they typed them in conversation. Copy-paste from session data. Do NOT paraphrase, summarize, or invent concept labels.
+**DO NOT summarize or synthesize. Copy-paste ONLY.**
 
-| Bad (concept label) | Good (exact words) |
-|---------------------|-------------------|
+`phrase` must be the owner's **EXACT verbatim words** as they typed them in conversation. Before including a catchphrase, locate the EXACT line in the compressed session where the owner typed it. If you cannot point to a specific session message, do NOT include it.
+
+Catchphrases should be **SHORT** (2-8 characters typical). If your phrase is longer than 10 characters, it's almost certainly a paraphrase, not a real quote. Go back to the session data and find the actual short expression the owner used.
+
+| Bad (concept label / paraphrase) | Good (exact words the owner typed) |
+|----------------------------------|-------------------------------------|
 | "Jobs级质量" | "这个不够 Jobs 级" |
 | "微步" | "先微步一下" |
 | "完美主义陷阱" | "别掉进完美主义陷阱" |
 | "效率优先" | "先跑起来再说" |
+| "目标函数优先" | "先想清楚目标函数" |
+| "辩证思考，兼顾短期与长期" | "辩证一下" |
+| "Jobs-level obsession" | "Jobs 级" |
+| "微步教练规则：只给第一步" | "先微步" |
+
+**Common failure modes:**
+- Synthesizing a concept label from what the owner discusses (❌ "目标函数优先") instead of quoting their actual words (✅ "先想清楚目标函数")
+- Translating or formalizing casual speech (❌ "辩证思考，兼顾短期与长期，局部与整体" → ✅ "你辩证思考一下")
+- Using English translations when the owner typed in Chinese (❌ "Jobs-level obsession with quality" → ✅ "Jobs 级")
+- Writing a description of a behavior instead of quoting the phrase (❌ "微步教练规则：只给第一步" → ✅ "先微步")
 
 Search the compressed sessions for repeated phrases, sentence patterns, or signature expressions the owner actually uses. If you can't find the exact wording, don't include it.
 
@@ -244,13 +260,15 @@ The skills block has the most complex data pipeline. Three components, three dat
 | `toolCounts` | Tool usage stats (web_fetch ×45) — top 5-8 | **Exact tool name from data** | Semantic emoji | Top 2-3 only |
 
 - **Include ALL installed skills.** They represent the owner's capability investment.
-- **`count` for installed skills**: Search compressed sessions for how many times each skill was invoked (look for `/skillname`, skill name mentions, or skill-related activity). If you can't find evidence, set `count` to 1. Do NOT leave all skills at ×1 — differentiate based on observed usage.
+- **`count` for installed skills**: Use the `count` field from each skill in `installedSkills` in tools.json. If a skill has `count > 0`, use that exact number. For skills with `count: 0` (never observed invoked), set `count: 1` as minimum. Do NOT leave all skills at ×1 — the data has real counts, use them.
+- **`featured` for skills/tools**: Set `featured: true` for the **TOP 3** most impactful items — those with highest count or most relevant to the owner's core workflow. All other items get `featured: false`.
+- **Order by count descending.** Skills with the highest counts appear first.
 - **`count` for toolCounts**: Use the EXACT count from `toolCounts` in tools.json. These are real measured numbers — do NOT change them.
 - **`toolCounts` names must be the exact tool names from the data** (e.g. `web_fetch`, `memory_search`, `Task`, `Bash`). Do NOT rename them to creative Chinese names.
 - AI writes `highlight` for each: describe the tool's role in the owner's workflow (not generic tool description)
 - Skills listed BEFORE raw tools
 - Do NOT invent tools that don't exist in the data. Do NOT aggregate multiple tools into made-up categories.
-- **`clawProfile.stats` SKILLS count** = total number of installed skills from `installedSkills` array in tools.json. Count them accurately.
+- **`clawProfile.stats` SKILLS count** = the exact number from tools.json's `skillCount` field, or if absent, count the `installedSkills` array length. Do NOT count `toolCounts` items. Do NOT make up a number. The total number of skill entries (not toolCounts entries) in `tools[]` output should match this SKILLS count.
 
 **`cron[]`** — From `_cr_parts/cron.json`. Include ALL cron jobs.
 

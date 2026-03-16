@@ -1020,6 +1020,9 @@ def query_memory_db(limit: int) -> List[dict]:
 # Tool & Skill Extraction
 # ---------------------------------------------------------------------------
 
+TOOL_NAME_RE = re.compile(r'"toolName"\s*:\s*"([^"]+)"')
+
+
 def extract_tools(sampled_sessions: List[Path]) -> dict:
     """Extract tool usage counts and installed skills."""
     tool_counts: Counter = Counter()
@@ -1031,16 +1034,21 @@ def extract_tools(sampled_sessions: List[Path]) -> dict:
                     line = line.strip()
                     if not line:
                         continue
+                    # Fast regex scan for OpenClaw toolName fields
+                    for m in TOOL_NAME_RE.finditer(line):
+                        tool_counts[m.group(1)] += 1
                     try:
                         obj = json.loads(line)
                     except json.JSONDecodeError:
                         continue
+                    # Claude Code format: content[].type=="tool_use"
                     content = obj.get("content", [])
                     if isinstance(content, list):
                         for block in content:
                             if isinstance(block, dict):
                                 if block.get("type") in ("tool_use", "function_call"):
                                     tool_counts[block.get("name", "unknown")] += 1
+                    # Claude Code format: tool_calls[]
                     for tc in obj.get("tool_calls", []):
                         if isinstance(tc, dict):
                             name = tc.get("function", {}).get("name") or tc.get("name", "unknown")
@@ -1071,12 +1079,25 @@ def extract_tools(sampled_sessions: List[Path]) -> dict:
     # Count skill invocations from session content
     skill_names = {s["name"].lower() for s in skills_found}
     skill_usage: Counter = Counter()
+    # Build word-boundary regex patterns for each skill name
+    skill_patterns = {}
+    for sname in skill_names:
+        try:
+            skill_patterns[sname] = re.compile(r'\b' + re.escape(sname) + r'\b', re.IGNORECASE)
+        except re.error:
+            pass
     for path in sampled_sessions:
         try:
             text = path.read_text(encoding="utf-8", errors="replace")
             for sname in skill_names:
-                # Count mentions of /skillname or skill name in user messages
-                count = text.lower().count(f"/{sname}") + text.lower().count(f'"{sname}"')
+                # Exact /skillname match (original behavior)
+                count = text.lower().count(f"/{sname}")
+                # "name":"skillname" pattern (OpenClaw skill invocation)
+                count += text.lower().count(f'"name":"{sname}"')
+                # Word-boundary match for the skill name in session content
+                pat = skill_patterns.get(sname)
+                if pat:
+                    count += len(pat.findall(text))
                 if count > 0:
                     skill_usage[sname] += count
         except OSError:
@@ -1088,6 +1109,7 @@ def extract_tools(sampled_sessions: List[Path]) -> dict:
     return {
         "toolCounts": dict(tool_counts.most_common(20)),
         "installedSkills": skills_found,
+        "skillCount": len(skills_found),
     }
 
 
@@ -1440,6 +1462,43 @@ def cmd_prepare(args: argparse.Namespace) -> None:
             log(f"  Could not fetch owner summary: HTTP {e.code}")
     except Exception as e:
         log(f"  Could not fetch owner summary: {e}")
+
+    # Patch owner-summary with accurate local token data if available
+    owner_summary_path = PARTS_DIR / "owner-summary.json"
+    activity_path = PARTS_DIR / "activity.json"
+    if owner_summary_path.is_file() and activity_path.is_file():
+        try:
+            os_data = load_json(owner_summary_path)
+            act_data = load_json(activity_path)
+            local_tokens = act_data.get("summary", {}).get("totalTokens", 0)
+            local_sessions = act_data.get("summary", {}).get("totalSessions", 0)
+            local_days = act_data.get("summary", {}).get("totalDays", 0)
+            # Find this claw's entry in owner-summary and compare
+            claws = os_data.get("claws", [])
+            claw_slug = creds.get("slug", "")
+            claw_id = creds.get("claw_id", "")
+            patched = False
+            for claw_entry in claws:
+                entry_slug = claw_entry.get("slug", "")
+                entry_id = str(claw_entry.get("id", ""))
+                if (claw_slug and entry_slug == claw_slug) or (claw_id and entry_id == claw_id):
+                    old_tokens = claw_entry.get("tokens", 0)
+                    if local_tokens > old_tokens * 1.1:  # >10% larger means stale
+                        token_diff = local_tokens - old_tokens
+                        claw_entry["tokens"] = local_tokens
+                        claw_entry["messages"] = max(claw_entry.get("messages", 0), local_sessions)
+                        claw_entry["days"] = max(claw_entry.get("days", 0), local_days)
+                        # Update totals
+                        os_data["totalTokens"] = os_data.get("totalTokens", 0) + token_diff
+                        os_data["totalMessages"] = max(os_data.get("totalMessages", 0), local_sessions)
+                        os_data["totalDays"] = max(os_data.get("totalDays", 0), local_days)
+                        patched = True
+                        log(f"  Patched owner-summary tokens: {fmt_tokens(old_tokens)} → {fmt_tokens(local_tokens)} (local data is more accurate)")
+                    break
+            if patched:
+                save_json(owner_summary_path, os_data, indent=2)
+        except (OSError, json.JSONDecodeError, KeyError):
+            pass
 
     # Incremental: auto-download existing report using credentials
     log("[+] Checking for existing report (incremental mode)...")
