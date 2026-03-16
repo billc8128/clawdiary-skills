@@ -173,7 +173,7 @@ Generation order: **clawProfile** → **hero + showcase** → **stories + catchp
     "dimensions": {
       "depth": {"code": "D1-D5", "label": "深度", "evidence": "<=100 chars, cite specific behavior"},
       "breadth": {"code": "B1-B5", "label": "广度", "evidence": "<=100 chars"},
-      "orchestration": {"code": "O1-O5", "label": "驾驭", "evidence": "<=100 chars"}
+      "orchestration": {"code": "O1-O5", "label": "协同", "evidence": "<=100 chars"}
     }
   },
   "showcase": [

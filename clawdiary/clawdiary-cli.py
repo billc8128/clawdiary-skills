@@ -1557,7 +1557,7 @@ def auto_fix_report(report: dict) -> List[str]:
             cp["dimensions"] = {
                 "depth": {"code": cert.get("dimensionDepth", ""), "label": "深度", "evidence": signal_ev.get("depth", "")},
                 "breadth": {"code": cert.get("dimensionBreadth", ""), "label": "广度", "evidence": signal_ev.get("breadth", "")},
-                "orchestration": {"code": cert.get("dimensionOrchestration", ""), "label": "驾驭", "evidence": signal_ev.get("orchestration", "")},
+                "orchestration": {"code": cert.get("dimensionOrchestration", ""), "label": "协同", "evidence": signal_ev.get("orchestration", "")},
             }
             fixes.append("v2→v3: moved certification D/B/O → clawProfile.dimensions")
 
