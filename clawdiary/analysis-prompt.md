@@ -114,7 +114,7 @@ Schema and hard constraints are in SKILL.md. Below is craft guidance — what ma
 ### skills
 
 - `subtitle` — Measures human's AI behavior design investment. List harness files + scale (line counts, entry counts). NOT technical infrastructure
-- `tools` — Skills before tools. ALL installed skills included. AI writes `highlight` based on workflow context, not generic descriptions
+- `tools` — Skills before tools. ALL installed skills included. AI writes `highlight` based on workflow context, not generic descriptions. **toolCounts items use exact tool names from data** (`web_fetch`, `Task`, `Bash`) — do NOT rename them to Chinese or invent categories. Only `highlight` is AI-written, `name` is verbatim from data.
 - `cron` — ALL jobs included. Description from: (1) job's prompt/command field, (2) conversation context, (3) inferred from name
 
 ### letter

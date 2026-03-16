@@ -223,14 +223,16 @@ The skills block has the most complex data pipeline. Three components, three dat
 
 **`tools[]`** — Merge TWO sources from `_cr_parts/tools.json`:
 
-| Source | What | Icon | Featured? |
-|--------|------|------|-----------|
-| `installedSkills` | OpenClaw skills (clawdiary, clawfeed, etc.) | 🛠️ | Yes, prioritize |
-| `toolCounts` | Tool usage stats (web_fetch ×45) — top 5-8 | Semantic emoji | Top 2-3 only |
+| Source | What | `name` field | Icon | Featured? |
+|--------|------|-------------|------|-----------|
+| `installedSkills` | OpenClaw skills (clawdiary, clawfeed, etc.) | Skill name as-is | 🛠️ | Yes, prioritize |
+| `toolCounts` | Tool usage stats (web_fetch ×45) — top 5-8 | **Exact tool name from data** | Semantic emoji | Top 2-3 only |
 
 - **Include ALL installed skills.** They represent the owner's capability investment.
+- **`toolCounts` names must be the exact tool names from the data** (e.g. `web_fetch`, `memory_search`, `Task`, `Bash`). Do NOT rename them to creative Chinese names. `web_fetch` stays `web_fetch`, not "网页抓取". `Task` stays `Task`, not "sub-agent 调度".
 - AI writes `highlight` for each: describe the tool's role in the owner's workflow (not generic tool description)
 - Skills listed BEFORE raw tools
+- Do NOT invent tools that don't exist in the data. Do NOT aggregate multiple tools into made-up categories like "cron 自动化" or "飞书文档".
 
 **`cron[]`** — From `_cr_parts/cron.json`. Include ALL cron jobs.
 
