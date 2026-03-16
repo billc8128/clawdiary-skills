@@ -23,6 +23,20 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
+
+def _parse_iso(s: str) -> datetime:
+    """Parse ISO 8601 timestamp, compatible with Python 3.6+."""
+    s = s.replace("Z", "").replace("+00:00", "")
+    if "." in s:
+        base, frac = s.split(".", 1)
+        s = base + "." + frac[:6]
+        try:
+            return datetime.strptime(s, "%Y-%m-%dT%H:%M:%S.%f").replace(tzinfo=timezone.utc)
+        except ValueError:
+            pass
+    return datetime.strptime(s[:19], "%Y-%m-%dT%H:%M:%S").replace(tzinfo=timezone.utc)
+
+
 # ---------------------------------------------------------------------------
 # Constants
 # ---------------------------------------------------------------------------
@@ -484,7 +498,7 @@ def extract_timestamps(path: Path) -> List[datetime]:
                 if ts:
                     if isinstance(ts, str):
                         try:
-                            dt = datetime.fromisoformat(ts.replace("Z", "+00:00"))
+                            dt = _parse_iso(ts)
                             timestamps.append(dt)
                         except (ValueError, TypeError):
                             pass
