@@ -1068,6 +1068,23 @@ def extract_tools(sampled_sessions: List[Path]) -> dict:
             except OSError:
                 continue
 
+    # Count skill invocations from session content
+    skill_names = {s["name"].lower() for s in skills_found}
+    skill_usage: Counter = Counter()
+    for path in sampled_sessions:
+        try:
+            text = path.read_text(encoding="utf-8", errors="replace")
+            for sname in skill_names:
+                # Count mentions of /skillname or skill name in user messages
+                count = text.lower().count(f"/{sname}") + text.lower().count(f'"{sname}"')
+                if count > 0:
+                    skill_usage[sname] += count
+        except OSError:
+            continue
+
+    for skill in skills_found:
+        skill["count"] = skill_usage.get(skill["name"].lower(), 0)
+
     return {
         "toolCounts": dict(tool_counts.most_common(20)),
         "installedSkills": skills_found,

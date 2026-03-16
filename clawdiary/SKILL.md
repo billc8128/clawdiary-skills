@@ -209,9 +209,22 @@ Generation order: **clawProfile** → **hero + showcase** → **stories + catchp
 | `clawProfile.dimensions` | depth/breadth/orchestration each with code + evidence citing specific behavior. |
 | `showcase` | 3-6 items. `metric` has number. `fact` <=50 chars. Different domains. |
 | `stories` | 1-3 items. Must have turningPoint + ownerQuote. Self-contained. |
-| `catchphrases` | 3-8 items. No single punctuation (？。!). No generic words (ok/好的/嗯). `frequency` = number. |
+| `catchphrases` | 3-8 items. **`phrase` = owner's EXACT verbatim words copied from conversation** (NOT paraphrased concepts). No single punctuation (？。!). No generic words (ok/好的/嗯). `frequency` = number. See § Catchphrase Rules. |
 | `skills` | See § Skills Block Assembly below. |
 | `letter.text` | 100-200 字. Must reference a specific showcase achievement. |
+
+### Catchphrase Rules
+
+`phrase` must be the owner's **EXACT verbatim words** as they typed them in conversation. Copy-paste from session data. Do NOT paraphrase, summarize, or invent concept labels.
+
+| Bad (concept label) | Good (exact words) |
+|---------------------|-------------------|
+| "Jobs级质量" | "这个不够 Jobs 级" |
+| "微步" | "先微步一下" |
+| "完美主义陷阱" | "别掉进完美主义陷阱" |
+| "效率优先" | "先跑起来再说" |
+
+Search the compressed sessions for repeated phrases, sentence patterns, or signature expressions the owner actually uses. If you can't find the exact wording, don't include it.
 
 ### Skills Block: Assembly Guide
 
@@ -231,10 +244,13 @@ The skills block has the most complex data pipeline. Three components, three dat
 | `toolCounts` | Tool usage stats (web_fetch ×45) — top 5-8 | **Exact tool name from data** | Semantic emoji | Top 2-3 only |
 
 - **Include ALL installed skills.** They represent the owner's capability investment.
-- **`toolCounts` names must be the exact tool names from the data** (e.g. `web_fetch`, `memory_search`, `Task`, `Bash`). Do NOT rename them to creative Chinese names. `web_fetch` stays `web_fetch`, not "网页抓取". `Task` stays `Task`, not "sub-agent 调度".
+- **`count` for installed skills**: Search compressed sessions for how many times each skill was invoked (look for `/skillname`, skill name mentions, or skill-related activity). If you can't find evidence, set `count` to 1. Do NOT leave all skills at ×1 — differentiate based on observed usage.
+- **`count` for toolCounts**: Use the EXACT count from `toolCounts` in tools.json. These are real measured numbers — do NOT change them.
+- **`toolCounts` names must be the exact tool names from the data** (e.g. `web_fetch`, `memory_search`, `Task`, `Bash`). Do NOT rename them to creative Chinese names.
 - AI writes `highlight` for each: describe the tool's role in the owner's workflow (not generic tool description)
 - Skills listed BEFORE raw tools
-- Do NOT invent tools that don't exist in the data. Do NOT aggregate multiple tools into made-up categories like "cron 自动化" or "飞书文档".
+- Do NOT invent tools that don't exist in the data. Do NOT aggregate multiple tools into made-up categories.
+- **`clawProfile.stats` SKILLS count** = total number of installed skills from `installedSkills` array in tools.json. Count them accurately.
 
 **`cron[]`** — From `_cr_parts/cron.json`. Include ALL cron jobs.
 
