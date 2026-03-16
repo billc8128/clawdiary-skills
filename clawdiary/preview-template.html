@@ -339,8 +339,17 @@
       var report = data[0], activity = data[1], meta = data[2], shareIntro = data[3];
       var html = '';
       var isV2 = !!report.hero;
+      var isV3 = isV2 && !!report.skills;
 
-      if (isV2) {
+      if (isV3) {
+        html += renderV3UserSummary(report);
+        html += renderV3ClawHero(report);
+        html += renderV3Showcase(report);
+        html += renderV3Stories(report);
+        html += renderV3Catchphrases(report);
+        html += renderV3Skills(report);
+        html += renderV3Letter(report);
+      } else if (isV2) {
         html += renderV2Hero(report);
         html += renderV2ClawProfile(report);
         html += renderV2Certification(report);
@@ -380,6 +389,157 @@
       return '<section class="share-intro-section">' +
         '<div class="section-header"><span class="label">\u7FA4\u804A\u4ECB\u7ECD</span></div>' +
         '<div class="share-intro-content">' + esc(text) + '</div>' +
+      '</section>';
+    }
+
+    /* =========================================
+       V3 RENDER FUNCTIONS
+       ========================================= */
+
+    var LEVEL_LABELS = {L1:'\u867E\u82D7',L2:'\u5C0F\u9497',L3:'\u7EA2\u58F3',L4:'\u5DE8\u9497',L5:'\u867E\u7687'};
+    var vibeColors = {demanding:'var(--primary)',decisive:'var(--secondary)',philosophical:'var(--accent-purple)',pivot:'var(--accent-purple)',praise:'var(--accent-gold)',frustration:'var(--primary)'};
+
+    function renderV3UserSummary(r) {
+      var h = r.hero || {};
+      var stats = (h.stats || []).map(function(s, i) {
+        return '<div class="stat-cell"><div class="stat-value" style="color:' + statColors[i % 4] + '">' + esc(s.value) + '</div><div class="stat-label">' + esc(s.label) + '</div></div>';
+      }).join('');
+      return '<section class="hero">' +
+        '<div class="hero-owner">' + esc(h.ownerName || '') + '</div>' +
+        '<h1>' + esc(h.headline || '') + '</h1>' +
+        '<p class="hero-tagline">' + esc(h.tagline || '') + '</p>' +
+        '<div class="stat-row" style="grid-template-columns:repeat(' + Math.min((h.stats||[]).length, 4) + ',1fr)">' + stats + '</div>' +
+      '</section>';
+    }
+
+    function renderV3ClawHero(r) {
+      var cp = r.clawProfile || {};
+      var levelCode = cp.level || '';
+      var levelLabel = LEVEL_LABELS[levelCode] || '';
+      var levelColor = statColors[['L1','L2','L3','L4','L5'].indexOf(levelCode) % 5] || 'var(--primary)';
+      var grid = [
+        {label:'\u4E3B\u804C', value: cp.functionLabel || cp['function'] || ''},
+        {label:'\u9886\u57DF', value: cp.domainLabel || cp.domain || ''},
+        {label:'\u4EBA\u683C', value: cp.personaLabel || cp.persona || ''},
+        {label:'\u6A21\u578B', value: cp.model || ''}
+      ];
+      var gridHtml = grid.map(function(g) {
+        return '<div style="padding:16px;border:1px solid var(--border);border-radius:6px"><div class="label" style="margin-bottom:8px">' + esc(g.label) + '</div><div style="font-size:16px;font-weight:600">' + esc(g.value) + '</div></div>';
+      }).join('');
+      var cpStats = (cp.stats || []).map(function(s, i) {
+        return '<div class="stat-cell"><div class="stat-value" style="color:' + statColors[i % 4] + '">' + esc(s.value) + '</div><div class="stat-label">' + esc(s.label) + '</div></div>';
+      }).join('');
+      var dims = cp.dimensions || {};
+      var dimHtml = ['depth','breadth','orchestration'].map(function(k) {
+        var d = dims[k];
+        if (!d) return '';
+        var colors = {depth:'var(--secondary)',breadth:'var(--accent-gold)',orchestration:'var(--accent-purple)'};
+        return '<div style="padding:12px 16px;border-left:3px solid ' + (colors[k]||'var(--border)') + ';background:var(--surface);border-radius:0 6px 6px 0;margin-bottom:8px">' +
+          '<span style="font-family:var(--font-mono);font-size:12px;color:' + (colors[k]||'var(--text-muted)') + ';font-weight:600">' + esc(d.code || '') + '</span> ' +
+          '<span style="font-size:13px;color:var(--text-muted)">' + esc(d.label || '') + '</span>' +
+          (d.evidence ? '<div style="font-size:13px;color:var(--text-muted);margin-top:4px">' + esc(d.evidence) + '</div>' : '') +
+        '</div>';
+      }).join('');
+      return '<section>' +
+        '<div class="label" style="color:var(--primary);margin-bottom:16px">CLAW REPORT</div>' +
+        '<div style="display:flex;align-items:baseline;gap:16px;margin-bottom:16px">' +
+          '<div style="font-size:36px;font-weight:800">' + esc(cp.clawName || '') + '</div>' +
+          '<span style="font-family:var(--font-mono);font-size:13px;padding:4px 10px;border:1px solid ' + levelColor + ';color:' + levelColor + ';border-radius:4px">' + esc(levelCode + ' ' + levelLabel) + '</span>' +
+        '</div>' +
+        '<p style="font-size:15px;color:var(--text-secondary);margin-bottom:24px">' + esc(cp.oneLiner || '') + '</p>' +
+        '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px">' + gridHtml + '</div>' +
+        '<div class="stat-row" style="grid-template-columns:repeat(' + Math.min((cp.stats||[]).length, 4) + ',1fr);margin-bottom:24px">' + cpStats + '</div>' +
+        dimHtml +
+      '</section>';
+    }
+
+    function renderV3Showcase(r) {
+      var items = r.showcase || [];
+      if (!items.length) return '';
+      var html = items.map(function(s) {
+        return '<div style="padding-left:16px;border-left:3px solid var(--primary);margin-bottom:24px">' +
+          '<div style="display:flex;gap:12px;align-items:baseline;margin-bottom:4px">' +
+            '<span style="font-family:var(--font-mono);font-size:13px;color:var(--primary);font-weight:700">' + esc(s.metric || '') + '</span>' +
+            '<span style="font-size:11px;color:var(--text-muted)">' + esc(s.domain || '') + '</span>' +
+          '</div>' +
+          '<div style="font-size:14px;color:var(--text)">' + esc(s.fact || '') + '</div>' +
+        '</div>';
+      }).join('');
+      return '<section><div class="label" style="color:var(--primary);margin-bottom:24px">TRACK RECORD</div>' + html + '</section>';
+    }
+
+    function renderV3Stories(r) {
+      var stories = r.stories || [];
+      if (!stories.length) return '';
+      var html = stories.map(function(s) {
+        return '<div style="border:1px solid var(--border);border-radius:8px;padding:24px;margin-bottom:16px">' +
+          '<h3 style="font-size:18px;font-weight:700;margin-bottom:12px">' + esc(s.title || '') + '</h3>' +
+          (s.setup ? '<p style="font-size:14px;color:var(--text-muted);margin-bottom:8px">' + nl2br(s.setup) + '</p>' : '') +
+          (s.turningPoint ? '<p style="font-size:14px;color:var(--text);margin-bottom:12px">' + nl2br(s.turningPoint) + '</p>' : '') +
+          (s.ownerQuote ? '<div style="background:rgba(255,107,53,0.06);border-left:3px solid var(--primary);padding:12px 16px;font-size:14px;margin-bottom:12px;color:var(--text)">' + esc(s.ownerQuote) + '</div>' : '') +
+          (s.resolution ? '<p style="font-size:14px;color:var(--text-muted);margin-bottom:8px">' + nl2br(s.resolution) + '</p>' : '') +
+          (s.reflection ? '<p style="font-size:13px;color:var(--text-muted);font-style:italic;opacity:0.7">' + nl2br(s.reflection) + '</p>' : '') +
+        '</div>';
+      }).join('');
+      return '<section><div class="label" style="color:var(--primary);margin-bottom:24px">STORIES</div>' + html + '</section>';
+    }
+
+    function renderV3Catchphrases(r) {
+      var items = r.catchphrases || [];
+      if (!items.length) return '';
+      var html = items.map(function(c) {
+        var color = vibeColors[c.vibe] || 'var(--text-muted)';
+        return '<div style="margin-bottom:24px">' +
+          '<div style="display:flex;align-items:baseline;gap:12px;margin-bottom:6px">' +
+            '<span style="font-size:16px;font-weight:700">' + esc(c.phrase || '') + '</span>' +
+            '<span style="font-family:var(--font-mono);font-size:12px;color:var(--text-muted)">\u00D7' + (c.frequency || '') + '</span>' +
+            '<span style="font-family:var(--font-mono);font-size:10px;padding:2px 8px;border-radius:10px;border:1px solid ' + color + ';color:' + color + '">' + esc(c.vibe || '') + '</span>' +
+          '</div>' +
+          '<div style="font-size:14px;color:var(--text-muted)">' + esc(c.clawInterpretation || '') + '</div>' +
+        '</div>';
+      }).join('');
+      return '<section><div class="label" style="color:var(--primary);margin-bottom:24px">OWNER\'S CATCHPHRASES</div>' + html + '</section>';
+    }
+
+    function renderV3Skills(r) {
+      var sk = r.skills || {};
+      var tools = sk.tools || [];
+      var cron = sk.cron || [];
+      if (!tools.length && !cron.length) return '';
+      var toolsHtml = tools.map(function(t) {
+        var style = t.featured ? 'border-left:3px solid var(--primary);padding-left:12px' : 'padding-left:15px';
+        return '<div style="margin-bottom:16px;' + style + '">' +
+          '<div style="display:flex;align-items:baseline;gap:8px">' +
+            '<span>' + esc(t.icon || '') + '</span>' +
+            '<span style="font-weight:600">' + esc(t.name || '') + '</span>' +
+            (t.count ? '<span style="font-family:var(--font-mono);font-size:12px;color:var(--text-muted)">\u00D7' + t.count + '</span>' : '') +
+          '</div>' +
+          (t.highlight ? '<div style="font-size:13px;color:var(--text-muted);margin-top:2px">' + esc(t.highlight) + '</div>' : '') +
+        '</div>';
+      }).join('');
+      var cronHtml = cron.length ? '<div class="label" style="margin:24px 0 12px">CRON JOBS</div>' + cron.map(function(c) {
+        return '<div style="border:1px solid var(--border);border-radius:6px;padding:12px 16px;margin-bottom:8px">' +
+          '<div style="display:flex;gap:12px;align-items:baseline">' +
+            '<span style="font-family:var(--font-mono);font-size:12px;color:var(--secondary)">' + esc(c.schedule || '') + '</span>' +
+            '<span style="font-weight:600;font-size:14px">' + esc(c.name || '') + '</span>' +
+          '</div>' +
+          (c.description ? '<div style="font-size:13px;color:var(--text-muted);margin-top:4px">' + esc(c.description) + '</div>' : '') +
+        '</div>';
+      }).join('') : '';
+      return '<section>' +
+        '<div class="label" style="color:var(--primary);margin-bottom:8px">SKILLS & CRON</div>' +
+        (sk.subtitle ? '<p style="font-size:13px;color:var(--text-muted);margin-bottom:20px">' + esc(sk.subtitle) + '</p>' : '') +
+        toolsHtml + cronHtml +
+      '</section>';
+    }
+
+    function renderV3Letter(r) {
+      var l = r.letter || {};
+      if (!l.text) return '';
+      return '<section>' +
+        '<div class="label" style="color:var(--primary);margin-bottom:24px">LETTER</div>' +
+        '<div style="font-size:14px;line-height:1.75;white-space:pre-wrap">' + nl2br(l.text) + '</div>' +
+        '<div style="font-family:var(--font-mono);font-size:13px;color:var(--primary);margin-top:24px">' + esc(l.signoff || '') + '</div>' +
       '</section>';
     }
 

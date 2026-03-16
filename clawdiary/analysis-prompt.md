@@ -142,7 +142,7 @@
 ```json
 {
   "hero": { "ownerName": "张三", "headline": "全栈独立开发者", "tagline": "3 个月从零到上线，独立完成整套产品", "stats": [{"value": "3,847", "label": "消息"}, {"value": "127", "label": "天"}, {"value": "21.4M", "label": "TOKENS"}, {"value": "3", "label": "龙虾"}] },
-  "clawProfile": { "clawName": "Vigil", "function": "全栈开发搭子", "domain": "全栈编程", "persona": "毒舌但高效", "level": "L4", "functionLabel": "开发搭子", "domainLabel": "全栈编程", "personaLabel": "毒舌严格", "levelLabel": "泰坦", "oneLiner": "L4 毒舌严格的全栈编程龙虾", "model": "Claude Opus", "stats": [{"value": "1,247", "label": "消息"}, {"value": "27", "label": "天"}, {"value": "3.5M", "label": "TOKENS"}, {"value": "8", "label": "SKILLS"}], "dimensions": { "depth": {"code": "D4", "label": "深度", "evidence": "多次纠正AI的架构方案"}, "breadth": {"code": "B3", "label": "广度", "evidence": "跨前端/后端/运维三域"}, "orchestration": {"code": "O4", "label": "驾驭", "evidence": "给AI分配分步策略并审查每步产出"} } },
+  "clawProfile": { "clawName": "Vigil", "function": "全栈开发搭子", "domain": "全栈编程", "persona": "毒舌但高效", "level": "L4", "functionLabel": "开发搭子", "domainLabel": "全栈编程", "personaLabel": "毒舌严格", "levelLabel": "巨钳", "oneLiner": "L4 毒舌严格的全栈编程龙虾", "model": "Claude Opus", "stats": [{"value": "1,247", "label": "消息"}, {"value": "27", "label": "天"}, {"value": "3.5M", "label": "TOKENS"}, {"value": "8", "label": "SKILLS"}], "dimensions": { "depth": {"code": "D4", "label": "深度", "evidence": "多次纠正AI的架构方案"}, "breadth": {"code": "B3", "label": "广度", "evidence": "跨前端/后端/运维三域"}, "orchestration": {"code": "O4", "label": "驾驭", "evidence": "给AI分配分步策略并审查每步产出"} } },
   "showcase": [{ "metric": "6 份报告", "domain": "产品调研", "fact": "27 天内完成 6 份深度竞品调研报告，覆盖 AI agent 赛道" }],
   "catchphrases": [{ "phrase": "这个方案不够优雅", "frequency": 8, "vibe": "demanding", "clawInterpretation": "我猜对代码质量有洁癖" }],
   "stories": [{ "title": "凌晨三点的推翻", "setup": "登录系统做到第三天，OAuth全套方案已经跑通了", "turningPoint": "凌晨两点半主人突然说'不对，全推翻，我们只做magic link'", "resolution": "magic link方案一天就做完了，比之前三天的方案还稳定", "reflection": "我大概理解了：他追求的是'用户不需要想'的体验", "ownerQuote": "好的产品不是功能多，是用户不需要想", "dateRange": "2026-02-10 to 2026-02-13", "theme": "transformation" }],
@@ -238,18 +238,18 @@
   Session 数量是参考信号，不是硬门槛
 
 ```
-L1 幼虾 — 探索者，刚开始用AI
-L2 硬壳 — 使用者，能有效使用AI完成任务
-L3 铠甲 — 驾驭者，能指挥AI做系统级工作
-L4 泰坦 — 协作者，AI是团队成员，用户是tech lead
-L5 共生 — 架构师，设计人+AI的协作系统
+L1 虾苗 — 探索者，刚开始用AI
+L2 小钳 — 使用者，能有效使用AI完成任务
+L3 红壳 — 驾驭者，能指挥AI做系统级工作
+L4 巨钳 — 协作者，AI是团队成员，用户是tech lead
+L5 虾皇 — 架构师，设计人+AI的协作系统
 ```
 
 **展示字段：**
 - `functionLabel`：function 的短中文标签（如 "开发搭子"）
 - `domainLabel`：domain 的短中文标签（如 "全栈编程"）
 - `personaLabel`：persona 的短中文标签（如 "毒舌军师"）
-- `levelLabel`：level 的中文标签（如 "泰坦"、"铠甲"）
+- `levelLabel`：level 的中文标签（如 "巨钳"、"红壳"）
 - `oneLiner`：一句话合并三个维度的龙虾定位
   - ✅ "L4 毒舌严格的全栈编程龙虾"
   - ✅ "L3 话多但靠谱的产品设计搭子"
@@ -348,7 +348,7 @@ L5 共生 — 架构师，设计人+AI的协作系统
 
 - `subtitle`：一句话概括用户设计的 **harness 结构**——用户怎么架构和驾驭这只龙虾。列出关键设定文件和规模（如 "1200 行 SOUL.md · AGENTS.md · 12 条自定义指令"）。harness 包括：SOUL.md（人格定义）、USER.md（用户画像）、AGENTS.md（执行指令）、MEMORY.md（策划记忆）、IDENTITY.md、TOOLS.md、自定义指令、heartbeat 定义等。展示文件名 + 行数或条目数。这不是技术基础设施清单（MCP 服务器、插件），而是人对 AI 行为架构的设计投入
 - `tools[]`：合并 `_cr_parts/tools.json` 中的**两个来源**：
-  1. **`installedSkills`** — OpenClaw 安装的 skill（如 clawreport、clawfeed、clawsync）。**这是 skill，不是工具。必须全部包含。**
+  1. **`installedSkills`** — OpenClaw 安装的 skill（如 clawdiary、clawfeed、clawsync）。**这是 skill，不是工具。必须全部包含。**
   2. **`toolCounts`** — 工具调用统计（如 web_fetch ×45）。取 top 5-8。
   - 每个有 `icon`（skill 用 🛠️，工具用语义 emoji）、`name`、`count`（调用次数，skill 可省略）
   - AI 补充 `highlight`（一句话描述用途）
@@ -423,7 +423,7 @@ L5 共生 — 架构师，设计人+AI的协作系统
     "persona": "毒舌但高效",
     "personaLabel": "毒舌搭子",
     "level": "L4",
-    "levelLabel": "泰坦",
+    "levelLabel": "巨钳",
     "oneLiner": "产品策略 · 竞品调研 · 进度追踪 — L4 毒舌严格的全栈编程龙虾",
     "model": "Claude Opus",
     "stats": [

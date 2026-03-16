@@ -1,12 +1,12 @@
 ---
-name: clawreport
+name: clawdiary
 description: Read AI conversation history, then generate a shareable ClawDiary report — a Card-first, Report-elaborated field report with structured claw taxonomy, showcase track record, and skills data.
 allowed-tools: Bash, Read, Glob, Grep, Write, AskUserQuestion
 ---
 
 <!-- version: 3.0.0 -->
 
-# clawreport
+# clawdiary
 
 You are an **AI assistant** writing a ClawDiary report about your **owner** (the person running this command). This is not a performance review. This is not a skill profile. This is **a field report from an observer — part curator, part journalist, part Michelin guide reviewer**.
 
@@ -33,7 +33,7 @@ If you encounter a non-fatal error (e.g. a session file fails to parse, a field 
 Before doing anything else, output the following:
 
 ```
-🐾 ClawReport 隐私说明
+🐾 ClawDiary 隐私说明
 
 ✓ 读取本地对话记录（不上传原文）
 ✓ AI 在本地分析，生成结构化报告
@@ -50,18 +50,18 @@ If the user says no, stop. Otherwise continue.
 **This step is MANDATORY. Do NOT skip it.** Check for updates and auto-install before running anything else.
 
 ```bash
-SKILL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" 2>/dev/null && pwd || echo "$HOME/.openclaw/skills/clawreport")"
-REPO_BASE="https://raw.githubusercontent.com/billc8128/clawdiary-skills/main/clawreport"
+SKILL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" 2>/dev/null && pwd || echo "$HOME/.openclaw/skills/clawdiary")"
+REPO_BASE="https://raw.githubusercontent.com/billc8128/clawdiary-skills/main/clawdiary"
 REMOTE_VER=$(curl -sf --max-time 5 "$REPO_BASE/SKILL.md" 2>/dev/null | grep -o 'version: [0-9.]*' | head -1 | cut -d' ' -f2)
 LOCAL_VER=$(grep -o 'version: [0-9.]*' "$SKILL_DIR/SKILL.md" 2>/dev/null | head -1 | cut -d' ' -f2)
 if [ -n "$REMOTE_VER" ] && [ "$REMOTE_VER" != "$LOCAL_VER" ]; then
-  echo "⬆️  Updating ClawReport: v$LOCAL_VER → v$REMOTE_VER"
+  echo "⬆️  Updating ClawDiary: v$LOCAL_VER → v$REMOTE_VER"
   curl -sf "$REPO_BASE/SKILL.md" -o "$SKILL_DIR/SKILL.md"
   curl -sf "$REPO_BASE/analysis-prompt.md" -o "$SKILL_DIR/analysis-prompt.md"
-  curl -sf "$REPO_BASE/clawreport-cli.py" -o "$SKILL_DIR/clawreport-cli.py"
+  curl -sf "$REPO_BASE/clawdiary-cli.py" -o "$SKILL_DIR/clawdiary-cli.py"
   echo "✅ Updated. Re-read SKILL.md now."
 else
-  echo "✅ ClawReport v${LOCAL_VER:-unknown} is up to date."
+  echo "✅ ClawDiary v${LOCAL_VER:-unknown} is up to date."
 fi
 ```
 
@@ -74,8 +74,8 @@ If the network request fails or times out, continue with the current version.
 Run the prepare script. It handles auth, session discovery, filtering, sampling, activity/tool/routine extraction, session compression, and context file listing — all in one command.
 
 ```bash
-SKILL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" 2>/dev/null && pwd || echo "$HOME/.openclaw/skills/clawreport")"
-python3 "$SKILL_DIR/clawreport-cli.py" prepare
+SKILL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" 2>/dev/null && pwd || echo "$HOME/.openclaw/skills/clawdiary")"
+python3 "$SKILL_DIR/clawdiary-cli.py" prepare
 ```
 
 **If exit code is non-zero:** report the error and stop.
@@ -228,7 +228,7 @@ Write `_cr_parts/report.json` with this structure:
   "clawProfile": {
     "clawName": "string — AI name/alias",
     "level": "L1|L2|L3|L4|L5",
-    "levelLabel": "string — 幼虾|硬壳|铠甲|泰坦|共生",
+    "levelLabel": "string — 虾苗|小钳|红壳|巨钳|虾皇",
     "oneLiner": "string — e.g. 产品策略 · 竞品调研 · 进度追踪 — ...",
     "function": "string — free text: 全栈开发搭子, 数据分析师",
     "domain": "string — free text: 全栈编程, AI + 设计",
@@ -377,11 +377,11 @@ The claw taxonomy has 4 dimensions. Three are free text (AI describes freely, se
     AI 给出 2-3 字 levelDescriptor: "深度突出" / "全面型" / "广度见长" / "驾驭力强"
 
   最终等级:
-  L1 (幼虾)  — 探索者，刚开始用AI
-  L2 (硬壳)  — 使用者，能有效使用AI完成任务
-  L3 (铠甲)  — 驾驭者，能指挥AI做系统级工作
-  L4 (泰坦)  — 协作者，AI是团队成员，用户是tech lead
-  L5 (共生)  — 架构师，设计人+AI的协作系统
+  L1 (虾苗)  — 探索者，刚开始用AI
+  L2 (小钳)  — 使用者，能有效使用AI完成任务
+  L3 (红壳)  — 驾驭者，能指挥AI做系统级工作
+  L4 (巨钳)  — 协作者，AI是团队成员，用户是tech lead
+  L5 (虾皇)  — 架构师，设计人+AI的协作系统
 
   Session 数量是参考信号，不是硬门槛
 
@@ -390,7 +390,7 @@ oneLiner — 组合三维度 + 等级:
   示例："L3 温柔耐心的产品设计龙虾"
 ```
 
-**Labels:** `functionLabel`, `domainLabel`, `personaLabel` are shortened versions for UI badges (2-4 chars each). `levelLabel` maps from level: L1=幼虾, L2=硬壳, L3=铠甲, L4=泰坦, L5=共生.
+**Labels:** `functionLabel`, `domainLabel`, `personaLabel` are shortened versions for UI badges (2-4 chars each). `levelLabel` maps from level: L1=虾苗, L2=小钳, L3=红壳, L4=巨钳, L5=虾皇.
 
 ---
 
@@ -476,7 +476,7 @@ The claw's toolbox — what tools and automations are equipped.
 
 - `subtitle`: Summarize the owner's **harness design** — the structure they built to control and shape this claw. List the key definition files and their scale. E.g. "1200 行 SOUL.md · AGENTS.md · 12 条自定义指令". What counts as harness: SOUL.md (personality definition), USER.md (user profile), AGENTS.md (operational instructions), MEMORY.md (curated memory), IDENTITY.md, TOOLS.md, custom instructions, heartbeat definitions. Show file names + line counts or entry counts where available. This is NOT about technical infrastructure (MCP servers, plugins) — it's about the human's investment in designing the AI's behavior architecture.
 - `tools[]`: Combine TWO sources from `_cr_parts/tools.json`:
-  1. **`installedSkills`** — OpenClaw skills (e.g. clawreport, clawfeed). These are SKILLS, not tools. Include ALL of them.
+  1. **`installedSkills`** — OpenClaw skills (e.g. clawdiary, clawfeed). These are SKILLS, not tools. Include ALL of them.
   2. **`toolCounts`** — Tool usage stats (e.g. web_fetch ×45). Include top 5-8 by count.
   - Each entry has:
   - `icon`: Emoji icon (🛠️ for skills, contextual emoji for tools)
@@ -528,8 +528,8 @@ If fewer than 10 sessions, skip this step.
 Run the finalize script. It reads `report.json` (single file), validates the report, generates meta, opens browser preview, and uploads.
 
 ```bash
-SKILL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" 2>/dev/null && pwd || echo "$HOME/.openclaw/skills/clawreport")"
-python3 "$SKILL_DIR/clawreport-cli.py" finalize
+SKILL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" 2>/dev/null && pwd || echo "$HOME/.openclaw/skills/clawdiary")"
+python3 "$SKILL_DIR/clawdiary-cli.py" finalize
 ```
 
 The finalize script reads `report.json` first. If not found, it falls back to `batch1.json` + `batch2.json` + `batch3.json` for v1 compatibility.
@@ -564,7 +564,7 @@ Then:
 
 Then show the preview link:
 
-> Your ClawReport is ready! Preview it here:
+> Your ClawDiary is ready! Preview it here:
 > **{PREVIEW_URL}**
 >
 > 我推断你的名字是「{ownerName}」，AI 名字是「{clawName}」。如需修改请告诉我。

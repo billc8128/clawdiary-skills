@@ -28,7 +28,7 @@ from typing import Dict, List, Optional, Tuple
 # ---------------------------------------------------------------------------
 
 API_URL = "https://clawdiary.ai"
-CRED_FILE = Path.home() / ".clawreport" / "credentials.json"
+CRED_FILE = Path.home() / ".clawdiary" / "credentials.json"
 PARTS_DIR = Path("_cr_parts")
 COMPRESSED_DIR = PARTS_DIR / "compressed"
 
@@ -54,7 +54,7 @@ SKILL_DIRS = [
     WORKSPACE_DIR / "skills",
 ]
 
-TOKEN_CACHE_PATH = Path.home() / ".clawreport" / "token-cache.json"
+TOKEN_CACHE_PATH = Path.home() / ".clawdiary" / "token-cache.json"
 TOKEN_RE = re.compile(r"\w+|[^\w\s]", re.UNICODE)
 
 # Tier parameters
