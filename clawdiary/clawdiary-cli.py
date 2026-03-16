@@ -509,19 +509,18 @@ def extract_timestamps(path: Path) -> List[datetime]:
 def extract_usage_from_jsonl(path: Path) -> dict:
     """Extract real token usage from JSONL session file.
 
-    Supports two JSONL formats:
-      - Claude Code: {"type":"assistant","message":{"role":"assistant","usage":{...}}}
-      - OpenClaw:    {"type":"message","role":"assistant","usage":{...}}
+    Supports two JSONL formats (both store usage inside entry.message.usage):
+      - Claude Code: {"type":"assistant","message":{"role":"assistant","usage":{input_tokens,...}}}
+      - OpenClaw:    {"type":"message","message":{"role":"assistant","usage":{input,...}}}
 
-    OpenClaw usage fields: input (can be negative), output, cacheRead, cacheWrite, totalTokens.
-    Claude Code fields: input_tokens, output_tokens, cache_read_input_tokens, etc.
+    Token calculation (aligned with token-stats):
+      - "input" field can be NEGATIVE (provider double-subtraction via New-API proxy)
+      - "totalTokens" is UNRELIABLE (arithmetic sum including negative input)
+      - Correct formula: prompt = cacheRead + max(input, 0), total = prompt + output
 
-    For total, prefer totalTokens when available (most reliable).
     Returns {input, cacheRead, cacheWrite, output, total}.
     """
     usage = {"input": 0, "cacheRead": 0, "cacheWrite": 0, "output": 0}
-    total_from_field = 0  # sum of totalTokens fields when available
-    has_total_field = False
     try:
         with open(path, "r", encoding="utf-8", errors="replace") as f:
             for line in f:
@@ -536,47 +535,35 @@ def extract_usage_from_jsonl(path: Path) -> dict:
                 if obj_type not in ("assistant", "message"):
                     continue
 
-                # Resolve usage dict from either format
-                u = None
-                if obj_type == "assistant":
-                    # Claude Code: usage nested under message
-                    msg = obj.get("message", {})
-                    if msg.get("role") not in ("assistant", None):
-                        continue
-                    u = msg.get("usage")
-                elif obj_type == "message":
-                    # OpenClaw: usage at top level, role at top level
-                    if obj.get("role") != "assistant":
-                        continue
-                    u = obj.get("usage")
+                # Both formats: usage is inside entry.message.usage
+                msg = obj.get("message", {})
+                if msg.get("role") not in ("assistant", None):
+                    continue
+                u = msg.get("usage")
                 if not u:
                     continue
 
-                # Use totalTokens if available (most reliable, especially for OpenClaw
-                # where input can be negative)
-                if "totalTokens" in u:
-                    total_from_field += u["totalTokens"]
-                    has_total_field = True
+                # Skip error responses
+                if msg.get("stopReason") == "error":
+                    continue
 
                 # Anthropic API format keys → OpenClaw format keys
-                fresh_input = u.get("input_tokens", u.get("input", 0))
+                inp = u.get("input_tokens", u.get("input", 0))
                 cache_read = u.get("cache_read_input_tokens", u.get("cacheRead", u.get("cache_read", 0)))
                 cache_write = u.get("cache_creation_input_tokens", u.get("cacheWrite", u.get("cache_write", 0)))
                 output = u.get("output_tokens", u.get("output", 0))
 
-                # input can be negative in OpenClaw when cache covers most of it
-                usage["input"] += max(0, fresh_input)
+                # input can be negative (New-API proxy double-subtraction bug)
+                usage["input"] += max(0, inp)
                 usage["cacheRead"] += cache_read
                 usage["cacheWrite"] += cache_write
                 usage["output"] += output
     except OSError:
         pass
 
-    # Prefer totalTokens sum when available
-    if has_total_field:
-        usage["total"] = total_from_field
-    else:
-        usage["total"] = usage["input"] + usage["cacheRead"] + usage["cacheWrite"] + usage["output"]
+    # total = prompt + output, where prompt = cacheRead + max(input, 0)
+    # Do NOT use totalTokens field — it's tainted by negative input values
+    usage["total"] = usage["cacheRead"] + usage["input"] + usage["output"]
     return usage
 
 
@@ -833,18 +820,29 @@ def scan_cron(tier: str) -> dict:
         try:
             jobs_data = load_json(jobs_path)
             if isinstance(jobs_data, list):
-                result["jobs"] = [
-                    {"name": j.get("name", "unnamed"), "schedule": j.get("schedule", "")}
-                    for j in jobs_data if isinstance(j, dict)
-                ]
+                raw_jobs = [j for j in jobs_data if isinstance(j, dict)]
             elif isinstance(jobs_data, dict):
-                result["jobs"] = [
-                    {"name": j.get("name", "unnamed"), "schedule": j.get("schedule", "")}
-                    for j in jobs_data.get("jobs", []) if isinstance(j, dict)
-                ]
+                raw_jobs = [j for j in jobs_data.get("jobs", []) if isinstance(j, dict)]
+            else:
+                raw_jobs = []
+            for j in raw_jobs:
+                job = {
+                    "name": j.get("name", "unnamed"),
+                    "schedule": j.get("schedule", ""),
+                }
+                # Preserve prompt/command for AI description generation
+                if j.get("prompt"):
+                    job["prompt"] = j["prompt"][:500]
+                if j.get("command"):
+                    job["command"] = j["command"][:500]
+                if j.get("description"):
+                    job["description"] = j["description"]
+                result["jobs"].append(job)
         except (OSError, json.JSONDecodeError):
             pass
 
+    # Count runs per job
+    run_counts = Counter()
     if params["cron_runs_days"] > 0:
         runs_dir = CRON_DIR / "runs"
         if runs_dir.is_dir():
@@ -853,14 +851,24 @@ def scan_cron(tier: str) -> dict:
                 if params["cron_runs_days"] < 999:
                     cutoff = (datetime.now() - timedelta(days=params["cron_runs_days"])).strftime("%Y-%m-%d")
                     run_files = [f for f in run_files if f.stem >= cutoff]
-                for fpath in run_files[:50]:
+                for fpath in run_files[:500]:
                     try:
                         data = load_json(fpath)
-                        result["runs"].append(data)
+                        job_name = data.get("job") or data.get("name") or data.get("job_name") or "unknown"
+                        run_counts[job_name] += 1
+                        if len(result["runs"]) < 50:
+                            result["runs"].append(data)
                     except (OSError, json.JSONDecodeError):
                         pass
             except OSError:
                 pass
+
+    # Attach run counts to jobs
+    for job in result["jobs"]:
+        count = run_counts.get(job["name"], 0)
+        if count > 0:
+            job["runs"] = count
+    result["total_runs"] = sum(run_counts.values())
 
     return result
 
@@ -1553,6 +1561,16 @@ def validate_v3(report: dict) -> Tuple[List[str], List[str]]:
     one_liner = cp.get("oneLiner", "")
     if not isinstance(one_liner, str) or not one_liner.strip():
         errors.append("clawProfile.oneLiner must be non-empty string")
+
+    # clawProfile.stats (exactly 4: 消息/天/TOKENS/SKILLS)
+    cp_stats = cp.get("stats", [])
+    if not isinstance(cp_stats, list) or len(cp_stats) != 4:
+        errors.append(f"clawProfile.stats must have exactly 4 items, got {len(cp_stats) if isinstance(cp_stats, list) else 'non-list'}")
+    else:
+        expected_labels = {"消息", "天", "TOKENS", "SKILLS"}
+        actual_labels = {s.get("label", "") for s in cp_stats if isinstance(s, dict)}
+        if actual_labels != expected_labels:
+            errors.append(f"clawProfile.stats labels must be 消息/天/TOKENS/SKILLS, got: {actual_labels}")
 
     # clawProfile.dimensions (D/B/O)
     dims = cp.get("dimensions", {})

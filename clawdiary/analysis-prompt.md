@@ -82,12 +82,12 @@ Schema and hard constraints are in SKILL.md. Below is craft guidance — what ma
 
 ### clawProfile
 
-- `function/domain/persona` — Write like you're describing a real character, not filling a form
-  - Good: "毒舌但高效", "冷静严格的军师", "话多但靠谱的搭子"
-  - Bad: "assistant", "friendly", "technology"
+- `function/domain/persona` — Write like you're naming a character in a drama, not filling a form. Must have **personality contrast or tension**
+  - Good: "毒舌但高效", "冷静严格的军师", "话多但靠谱的搭子", "温柔的暴君"
+  - Bad: "assistant", "friendly", "technology", "严格辩证", "认真负责" (too bland, no character)
 - `oneLiner` — Combine level + persona + domain in one vivid sentence
 - `dimensions.evidence` — Must cite specific observed behavior, not generic claims
-- `stats` — Claw-level (not owner-level). Fixed 4: 消息/天/TOKENS/SKILLS
+- `stats` — Claw-level (not owner-level). **Exactly 4**: 消息/天/TOKENS/SKILLS. Same structure as hero.stats but scoped to this claw. Labels must be exactly these, no variations ("活跃天"/"SOUL.MD 行数" are wrong)
 
 ### showcase
 
@@ -115,7 +115,7 @@ Schema and hard constraints are in SKILL.md. Below is craft guidance — what ma
 
 - `subtitle` — Measures human's AI behavior design investment. List harness files + scale (line counts, entry counts). NOT technical infrastructure
 - `tools` — Skills before tools. ALL installed skills included. AI writes `highlight` based on workflow context, not generic descriptions. **toolCounts items use exact tool names from data** (`web_fetch`, `Task`, `Bash`) — do NOT rename them to Chinese or invent categories. Only `highlight` is AI-written, `name` is verbatim from data.
-- `cron` — ALL jobs included. Description from: (1) job's prompt/command field, (2) conversation context, (3) inferred from name
+- `cron` — ALL jobs included. Copy `runs` count from data (execution count). Description from: (1) job's prompt/command field, (2) conversation context, (3) inferred from name
 
 ### letter
 
@@ -195,7 +195,7 @@ When `existing-report.json` exists, **merge** not replace. Read the old report f
 |------|--------|------|
 | **Append** | catchphrases, stories | Add new items. Update frequency for recurring phrases. Cap at 8 catchphrases, 3 stories (keep best) |
 | **Only-up** | clawProfile.level | Can upgrade (L2→L3), never downgrade. Update dimensions evidence |
-| **Best-wins** | hero.headline/tagline, clawProfile.function/domain/persona | Replace if new is more specific/impactful. Otherwise keep old |
+| **Best-wins** | hero.headline/tagline, clawProfile.function/domain/persona | Replace ONLY if new version is clearly more vivid/specific. Bland replacements ("严格辩证" replacing "毒舌严格的军师") are regressions — keep old |
 | **Latest-data** | hero.stats, skills.cron | Use newest numbers |
 | **Merge** | showcase, skills.tools | Dedupe by metric/name, re-rank by impact, keep top 3-6 / update counts |
 | **Rewrite** | letter, clawProfile.oneLiner | Always regenerate from latest data |

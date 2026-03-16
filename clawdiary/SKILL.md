@@ -181,7 +181,7 @@ Generation order: **clawProfile** → **hero + showcase** → **stories + catchp
   "skills": {
     "subtitle": "harness design summary",
     "tools": [{"icon": "emoji", "name": "string", "count": 0, "highlight": "string", "featured": true}],
-    "cron": [{"schedule": "每日 09:00", "name": "string", "description": "string"}]
+    "cron": [{"schedule": "每日 09:00", "name": "string", "description": "string", "runs": 27}]
   },
   "letter": {"text": "100-200 字", "signoff": "signature + status", "mood": "reflective|grateful|wry|bittersweet"}
 }
@@ -194,6 +194,8 @@ Generation order: **clawProfile** → **hero + showcase** → **stories + catchp
 | `hero.headline` | <=20 chars. No ×/+ joins. Single coherent statement. |
 | `hero.stats` | **Exactly 4**: 消息/天/TOKENS/龙虾. Values <=6 chars, no units. |
 | `clawProfile.level` | L1-L5 via round(mean(D,B,O)). See analysis-prompt.md § Classification. |
+| `clawProfile.stats` | **Exactly 4**: 消息/天/TOKENS/SKILLS. Claw-level (this claw only). Values <=6 chars, no units. |
+| `clawProfile.persona` | Must have personality contrast or tension ("毒舌但高效"). NOT bland labels ("严格辩证", "认真负责"). |
 | `clawProfile.dimensions` | depth/breadth/orchestration each with code + evidence citing specific behavior. |
 | `showcase` | 3-6 items. `metric` has number. `fact` <=50 chars. Different domains. |
 | `stories` | 1-3 items. Must have turningPoint + ownerQuote. Self-contained. |
@@ -226,12 +228,10 @@ The skills block has the most complex data pipeline. Three components, three dat
 
 **`cron[]`** — From `_cr_parts/cron.json`. Include ALL cron jobs.
 
-For each job, construct a meaningful `description`:
-1. Read the job's `prompt` or `command` field in cron.json (if present) — this is the primary source
-2. Cross-reference with conversation data — what did the owner say about this automation?
-3. If neither available, infer from the job `name`
-
-Format `schedule` as readable text: cron `0 9 * * *` → `"每日 09:00"`, `0 21 * * 0` → `"每周日 21:00"`
+For each job:
+1. **`runs`**: Copy the `runs` count from cron.json if present (number of executions). Do NOT omit or fabricate this.
+2. **`description`**: Construct from the job's `prompt` or `command` field in cron.json (primary source), cross-reference with conversation data, or infer from `name`.
+3. **`schedule`**: Format as readable text: cron `0 9 * * *` → `"每日 09:00"`, `0 21 * * 0` → `"每周日 21:00"`, every 30 min → `"每30分钟"`
 
 Cron automation demonstrates sophisticated AI orchestration — a user with 10+ cron jobs is almost certainly O4-O5.
 
