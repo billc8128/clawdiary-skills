@@ -109,7 +109,17 @@ Read all `_cr_parts/compressed/session_*.json`. Observe: characteristic phrases,
 - `_cr_parts/extensions.json` (if exists) → feeds skills.tools
 - `_cr_parts/memory_search.json` (deep scan only, if exists)
 
-### 2f. Read existing report (incremental mode)
+### 2f. Read owner summary (cross-claw aggregation)
+
+If `_cr_parts/owner-summary.json` exists, use it for `hero.stats`:
+- `totalMessages` → hero.stats[0] (消息)
+- `totalDays` → hero.stats[1] (天)
+- `totalTokens` → hero.stats[2] (TOKENS)
+- `clawCount` → hero.stats[3] (龙虾)
+
+This file contains **owner-level aggregated data across ALL claws**, not just the current one. hero.stats must reflect the owner's total, not just this claw's numbers.
+
+### 2g. Read existing report (incremental mode)
 
 If `_cr_parts/existing-report.json` exists, note names, showcase items, stories, classification. See analysis-prompt.md § Incremental for merge rules.
 
@@ -192,7 +202,7 @@ Generation order: **clawProfile** → **hero + showcase** → **stories + catchp
 | Block | Rules |
 |-------|-------|
 | `hero.headline` | <=20 chars. No ×/+ joins. Single coherent statement. |
-| `hero.stats` | **Exactly 4**: 消息/天/TOKENS/龙虾. Values <=6 chars, no units. |
+| `hero.stats` | **Exactly 4**: 消息/天/TOKENS/龙虾. Values <=6 chars, no units. **Use `owner-summary.json` totals** (not this claw's numbers). |
 | `clawProfile.level` | L1-L5 via round(mean(D,B,O)). See analysis-prompt.md § Classification. |
 | `clawProfile.stats` | **Exactly 4**: 消息/天/TOKENS/SKILLS. Claw-level (this claw only). Values <=6 chars, no units. |
 | `clawProfile.persona` | Must have personality contrast or tension ("毒舌但高效"). NOT bland labels ("严格辩证", "认真负责"). |

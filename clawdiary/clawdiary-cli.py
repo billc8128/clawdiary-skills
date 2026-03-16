@@ -43,6 +43,7 @@ def _parse_iso(s: str) -> datetime:
 
 API_URL = "https://clawdiary.ai"
 CRED_FILE = Path.home() / ".clawdiary" / "credentials.json"
+KNOWN_CLAWS_FILE = Path.home() / ".clawdiary" / "known_claws.json"
 PARTS_DIR = Path("_cr_parts")
 COMPRESSED_DIR = PARTS_DIR / "compressed"
 
@@ -143,8 +144,48 @@ def fingerprint(path: str, size: int, mtime: int) -> str:
 # Authentication
 # ---------------------------------------------------------------------------
 
+def _save_known_claw(creds: dict) -> None:
+    """Track this claw in known_claws.json for future auto-linking."""
+    known = []
+    if KNOWN_CLAWS_FILE.is_file():
+        try:
+            known = json.loads(KNOWN_CLAWS_FILE.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            known = []
+    claw_id = creds.get("claw_id", "")
+    if not any(k.get("claw_id") == claw_id for k in known):
+        known.append({
+            "claw_id": claw_id,
+            "api_key": creds.get("api_key", ""),
+            "slug": creds.get("slug", ""),
+            "api_url": creds.get("api_url", API_URL),
+        })
+        save_json(KNOWN_CLAWS_FILE, known, indent=2)
+
+
+def _find_existing_api_key() -> Optional[str]:
+    """Find an API key from a previously registered claw for auto-linking."""
+    if KNOWN_CLAWS_FILE.is_file():
+        try:
+            known = json.loads(KNOWN_CLAWS_FILE.read_text(encoding="utf-8"))
+            for k in known:
+                if k.get("api_key"):
+                    return k["api_key"]
+        except (OSError, json.JSONDecodeError):
+            pass
+    # Fallback: check if credentials.json exists with a different claw
+    if CRED_FILE.is_file():
+        try:
+            creds = load_json(CRED_FILE)
+            if creds.get("api_key"):
+                return creds["api_key"]
+        except (OSError, json.JSONDecodeError):
+            pass
+    return None
+
+
 def ensure_auth() -> dict:
-    """Return credentials dict; register if needed."""
+    """Return credentials dict; register if needed. Blocks if claw is not claimed."""
     if CRED_FILE.is_file():
         creds = load_json(CRED_FILE)
         try:
@@ -156,17 +197,40 @@ def ensure_auth() -> dict:
                 status = json.loads(resp.read())
             log(f"Authenticated. Status: {status.get('status', 'ok')}")
             if status.get("status") == "pending_claim":
-                log(f"  Claim link: {creds.get('claim_url', '(unknown)')}")
+                claim_url = creds.get("claim_url", "(unknown)")
+                log("")
+                log("=" * 60)
+                log("  STOP: This claw has not been claimed yet.")
+                log("")
+                log("  You must claim your claw before generating a report.")
+                log("  This ensures your owner-level stats are accurate")
+                log("  across all your claws.")
+                log("")
+                log(f"  Claim here: {claim_url}")
+                log("")
+                log("  After claiming, re-run this command.")
+                log("=" * 60)
+                die("Claw not claimed. Claim it first, then re-run.")
+            _save_known_claw(creds)
             return creds
         except Exception as e:
             log(f"  Status check failed ({e}), continuing with cached creds")
+            _save_known_claw(creds)
             return creds
 
     log("No credentials found. Registering...")
-    payload = json.dumps({
+    reg_payload = {
         "name": "OpenClaw",
         "description": "A loyal and opinionated AI assistant",
-    }).encode()
+    }
+
+    # Auto-link: if we have credentials from a previously claimed claw, pass them
+    existing_key = _find_existing_api_key()
+    if existing_key:
+        reg_payload["existing_api_key"] = existing_key
+        log("  Found existing claw credentials, attempting auto-link...")
+
+    payload = json.dumps(reg_payload).encode()
     req = urllib.request.Request(
         f"{API_URL}/api/claw/register",
         data=payload,
@@ -187,8 +251,24 @@ def ensure_auth() -> dict:
         "claim_url": data["claim_url"],
     }
     save_json(CRED_FILE, creds, indent=2)
-    log(f"Registered! Claim link: {creds['claim_url']}")
-    return creds
+    _save_known_claw(creds)
+
+    if data.get("auto_linked"):
+        log("Auto-linked to existing owner! No claim needed.")
+        return creds
+
+    claim_url = creds["claim_url"]
+    log(f"Registered!")
+    log("")
+    log("=" * 60)
+    log("  NEXT STEP: Claim your claw to continue.")
+    log("")
+    log(f"  Go to: {claim_url}")
+    log("")
+    log("  Enter your email to link this claw to your account.")
+    log("  After claiming, re-run this command.")
+    log("=" * 60)
+    die("Claw registered but not claimed. Claim it first, then re-run.")
 
 
 # ---------------------------------------------------------------------------
@@ -1320,6 +1400,29 @@ def cmd_prepare(args: argparse.Namespace) -> None:
         "resources": resources,
     }
     save_json(PARTS_DIR / "prepare_summary.json", prepare_summary, indent=2)
+
+    # Owner summary: fetch aggregated stats across all sibling claws
+    log("[+] Fetching owner summary (cross-claw aggregation)...")
+    try:
+        creds = load_json(CRED_FILE)
+        req = urllib.request.Request(
+            f"{creds['api_url']}/api/report/mine/owner-summary",
+            headers={"Authorization": f"Bearer {creds['api_key']}"},
+        )
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            owner_summary = json.loads(resp.read())
+        save_json(PARTS_DIR / "owner-summary.json", owner_summary, indent=2)
+        log(f"  Owner summary: {owner_summary['clawCount']} claws, "
+            f"{owner_summary['totalMessages']} messages, "
+            f"{owner_summary['totalDays']} days, "
+            f"{owner_summary['totalTokens']} tokens")
+    except urllib.error.HTTPError as e:
+        if e.code == 404:
+            log("  No owner data found (claw not claimed yet)")
+        else:
+            log(f"  Could not fetch owner summary: HTTP {e.code}")
+    except Exception as e:
+        log(f"  Could not fetch owner summary: {e}")
 
     # Incremental: auto-download existing report using credentials
     log("[+] Checking for existing report (incremental mode)...")

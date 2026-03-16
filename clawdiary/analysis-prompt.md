@@ -78,7 +78,7 @@ Schema and hard constraints are in SKILL.md. Below is craft guidance — what ma
   - **Certification**: has anchor ("AI 认证的全栈速通选手")
   - Bad: vague ("一个人活成一支团队"), generic ("勤奋的开发者"), joined ("X × Y")
 - `tagline` — The "wait, what?" sentence for non-technical people. Must have concrete numbers.
-- `stats` — Fixed 4 items (消息/天/TOKENS/龙虾). Values are pure numbers, no units in value field. Use K/M/B suffix for tokens.
+- `stats` — Fixed 4 items (消息/天/TOKENS/龙虾). **Owner-level totals from `_cr_parts/owner-summary.json`** (aggregated across ALL claws, not just this one). If owner-summary.json is missing, use this claw's activity data as fallback. Values are pure numbers, no units in value field. Use K/M/B suffix for tokens.
 
 ### clawProfile
 
