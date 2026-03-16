@@ -75,17 +75,7 @@ python3 "$SKILL_DIR/clawdiary-cli.py" prepare
 
 ### 1d. Incremental Support
 
-If `--claw-id` was passed, fetch existing report:
-
-```bash
-CLAW_ID=$(python3 -c "import json; d=json.load(open('_cr_parts/prepare_summary.json')); print(d.get('claw_id',''))")
-if [ -n "$CLAW_ID" ]; then
-  API_KEY=$(python3 -c "import json; d=json.load(open('_cr_parts/credentials.json')); print(d.get('api_key',''))")
-  curl -sf -H "Authorization: Bearer $API_KEY" \
-    "https://clawdiary.ai/api/reports/$CLAW_ID/current" \
-    -o _cr_parts/existing-report.json 2>/dev/null || true
-fi
-```
+The CLI automatically fetches the existing report during prepare (no `--claw-id` needed). If `_cr_parts/existing-report.json` exists after prepare, incremental mode is active.
 
 Print status: `[1/4] Prepare complete ({tier} tier): {sampled} sessions sampled.`
 

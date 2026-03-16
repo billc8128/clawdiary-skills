@@ -69,7 +69,6 @@ TIER_PARAMS = {
         "memory_db_limit": 0,
         "cron_runs_days": 0,
         "scan_extensions": False,
-        "filter_days": 30,
     },
     "standard": {
         "session_recent": 15,
@@ -81,7 +80,6 @@ TIER_PARAMS = {
         "memory_db_limit": 0,
         "cron_runs_days": 7,
         "scan_extensions": True,
-        "filter_days": 30,
     },
     "deep": {
         "session_recent": 30,
@@ -93,7 +91,6 @@ TIER_PARAMS = {
         "memory_db_limit": 50,
         "cron_runs_days": 999,
         "scan_extensions": True,
-        "filter_days": 60,
     },
 }
 
@@ -512,12 +509,19 @@ def extract_timestamps(path: Path) -> List[datetime]:
 def extract_usage_from_jsonl(path: Path) -> dict:
     """Extract real token usage from JSONL session file.
 
-    Reads assistant messages with usage data.
-    Supports both Anthropic API format (input_tokens, cache_read_input_tokens, etc.)
-    and simplified format (input, cacheRead, etc.).
+    Supports two JSONL formats:
+      - Claude Code: {"type":"assistant","message":{"role":"assistant","usage":{...}}}
+      - OpenClaw:    {"type":"message","role":"assistant","usage":{...}}
+
+    OpenClaw usage fields: input (can be negative), output, cacheRead, cacheWrite, totalTokens.
+    Claude Code fields: input_tokens, output_tokens, cache_read_input_tokens, etc.
+
+    For total, prefer totalTokens when available (most reliable).
     Returns {input, cacheRead, cacheWrite, output, total}.
     """
     usage = {"input": 0, "cacheRead": 0, "cacheWrite": 0, "output": 0}
+    total_from_field = 0  # sum of totalTokens fields when available
+    has_total_field = False
     try:
         with open(path, "r", encoding="utf-8", errors="replace") as f:
             for line in f:
@@ -528,33 +532,51 @@ def extract_usage_from_jsonl(path: Path) -> dict:
                     obj = json.loads(line)
                 except json.JSONDecodeError:
                     continue
-                # type can be "assistant" (Claude Code) or "message" (OpenClaw)
                 obj_type = obj.get("type", "")
                 if obj_type not in ("assistant", "message"):
                     continue
-                msg = obj.get("message", {})
-                if obj_type == "message" and msg.get("role") != "assistant":
-                    continue
-                if obj_type == "assistant" and msg.get("role") not in ("assistant", None):
-                    continue
-                u = msg.get("usage")
+
+                # Resolve usage dict from either format
+                u = None
+                if obj_type == "assistant":
+                    # Claude Code: usage nested under message
+                    msg = obj.get("message", {})
+                    if msg.get("role") not in ("assistant", None):
+                        continue
+                    u = msg.get("usage")
+                elif obj_type == "message":
+                    # OpenClaw: usage at top level, role at top level
+                    if obj.get("role") != "assistant":
+                        continue
+                    u = obj.get("usage")
                 if not u:
                     continue
-                # Anthropic API format
-                fresh_input = max(0, u.get("input_tokens", u.get("input", 0)))
+
+                # Use totalTokens if available (most reliable, especially for OpenClaw
+                # where input can be negative)
+                if "totalTokens" in u:
+                    total_from_field += u["totalTokens"]
+                    has_total_field = True
+
+                # Anthropic API format keys → OpenClaw format keys
+                fresh_input = u.get("input_tokens", u.get("input", 0))
                 cache_read = u.get("cache_read_input_tokens", u.get("cacheRead", u.get("cache_read", 0)))
                 cache_write = u.get("cache_creation_input_tokens", u.get("cacheWrite", u.get("cache_write", 0)))
                 output = u.get("output_tokens", u.get("output", 0))
-                # Estimate cache write when agent doesn't pass it through
-                if cache_write == 0 and (fresh_input > 0 or output > 0):
-                    cache_write = fresh_input + output
-                usage["input"] += fresh_input
+
+                # input can be negative in OpenClaw when cache covers most of it
+                usage["input"] += max(0, fresh_input)
                 usage["cacheRead"] += cache_read
                 usage["cacheWrite"] += cache_write
                 usage["output"] += output
     except OSError:
         pass
-    usage["total"] = usage["input"] + usage["cacheRead"] + usage["cacheWrite"] + usage["output"]
+
+    # Prefer totalTokens sum when available
+    if has_total_field:
+        usage["total"] = total_from_field
+    else:
+        usage["total"] = usage["input"] + usage["cacheRead"] + usage["cacheWrite"] + usage["output"]
     return usage
 
 
@@ -1165,18 +1187,15 @@ def cmd_prepare(args: argparse.Namespace) -> None:
     params = TIER_PARAMS[tier]
     log(f"\n[3/8] 选择档位: {tier}")
 
-    # 4. Discover & sample sessions
+    # 4. Discover & sample sessions (no date filter — use ALL history)
     log("[4/8] Scanning sessions...")
     all_sessions = discover_sessions()
     log(f"  Found {len(all_sessions)} session files")
 
-    recent = filter_recent(all_sessions, days=params["filter_days"])
-    log(f"  After {params['filter_days']}-day filter: {len(recent)} sessions")
+    if not all_sessions:
+        die("No session files found.")
 
-    if not recent:
-        die(f"No sessions in the last {params['filter_days']} days.")
-
-    sampled = sample_sessions(recent, tier)
+    sampled = sample_sessions(all_sessions, tier)
     log(f"  Sampled {len(sampled)} sessions")
 
     # 5. Activity extraction
@@ -1270,7 +1289,6 @@ def cmd_prepare(args: argparse.Namespace) -> None:
         },
         "sessions": {
             "total": len(all_sessions),
-            "recent": len(recent),
             "sampled": len(sampled),
         },
         "activity_summary": summary,
@@ -1281,26 +1299,27 @@ def cmd_prepare(args: argparse.Namespace) -> None:
     }
     save_json(PARTS_DIR / "prepare_summary.json", prepare_summary, indent=2)
 
-    # Incremental: download existing report if --claw-id provided
-    if args.claw_id:
-        log("[+] Downloading existing report for incremental update...")
-        try:
-            creds = load_json(CRED_FILE)
-            req = urllib.request.Request(
-                f"{creds['api_url']}/api/reports/{args.claw_id}/current",
-                headers={"Authorization": f"Bearer {creds['api_key']}"},
-            )
-            with urllib.request.urlopen(req, timeout=15) as resp:
-                existing = json.loads(resp.read())
-            save_json(PARTS_DIR / "existing-report.json", existing, indent=2)
-            log("  Existing report downloaded to _cr_parts/existing-report.json")
-        except urllib.error.HTTPError as e:
-            if e.code == 404:
-                log("  No existing report found (first-time generation)")
-            else:
-                log(f"  Failed to download existing report: {e}")
-        except Exception as e:
-            log(f"  Failed to download existing report: {e}")
+    # Incremental: auto-download existing report using credentials
+    log("[+] Checking for existing report (incremental mode)...")
+    try:
+        creds = load_json(CRED_FILE)
+        req = urllib.request.Request(
+            f"{creds['api_url']}/api/report/mine/current",
+            headers={"Authorization": f"Bearer {creds['api_key']}"},
+        )
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            existing = json.loads(resp.read())
+        # Extract the reportJson from the response
+        report_json = existing.get("reportJson", existing)
+        save_json(PARTS_DIR / "existing-report.json", report_json, indent=2)
+        log("  Existing report downloaded → _cr_parts/existing-report.json (incremental mode ON)")
+    except urllib.error.HTTPError as e:
+        if e.code == 404:
+            log("  No existing report found (first-time generation)")
+        else:
+            log(f"  Could not fetch existing report: HTTP {e.code}")
+    except Exception as e:
+        log(f"  Could not fetch existing report: {e}")
 
     log("")
     log(f"Prepare complete ({tier} tier).")
@@ -2032,7 +2051,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="ClawDiary CLI")
     sub = parser.add_subparsers(dest="command")
     prep = sub.add_parser("prepare", help="Auth + data discovery + tier selection + scanning")
-    prep.add_argument("--claw-id", help="Claw ID for incremental report update")
+    prep.add_argument("--claw-id", help="(deprecated, now auto-detected) Claw ID for incremental update")
     sub.add_parser("finalize", help="Validate + upload")
 
     args = parser.parse_args()
