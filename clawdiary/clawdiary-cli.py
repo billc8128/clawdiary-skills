@@ -1510,17 +1510,25 @@ def cmd_prepare(args: argparse.Namespace) -> None:
                 entry_id = str(claw_entry.get("id", ""))
                 if (claw_slug and entry_slug == claw_slug) or (claw_id and entry_id == claw_id):
                     old_tokens = claw_entry.get("tokens", 0)
-                    if local_tokens > old_tokens * 1.1:  # >10% larger means stale
+                    old_messages = claw_entry.get("messages", 0)
+                    # Patch tokens if local is >10% larger
+                    if local_tokens > old_tokens * 1.1:
                         token_diff = local_tokens - old_tokens
                         claw_entry["tokens"] = local_tokens
-                        claw_entry["messages"] = max(claw_entry.get("messages", 0), local_messages)
-                        claw_entry["days"] = max(claw_entry.get("days", 0), local_days)
-                        # Update totals
                         os_data["totalTokens"] = os_data.get("totalTokens", 0) + token_diff
-                        os_data["totalMessages"] = max(os_data.get("totalMessages", 0), local_messages)
-                        os_data["totalDays"] = max(os_data.get("totalDays", 0), local_days)
                         patched = True
                         log(f"  Patched owner-summary tokens: {fmt_tokens(old_tokens)} → {fmt_tokens(local_tokens)} (local data is more accurate)")
+                    # Always patch messages/days independently (server may have 0 from old CLI)
+                    if local_messages > old_messages:
+                        msg_diff = local_messages - old_messages
+                        claw_entry["messages"] = local_messages
+                        os_data["totalMessages"] = os_data.get("totalMessages", 0) + msg_diff
+                        patched = True
+                        log(f"  Patched owner-summary messages: {old_messages} → {local_messages}")
+                    if local_days > claw_entry.get("days", 0):
+                        claw_entry["days"] = local_days
+                        os_data["totalDays"] = max(os_data.get("totalDays", 0), local_days)
+                        patched = True
                     break
             if patched:
                 save_json(owner_summary_path, os_data, indent=2)
