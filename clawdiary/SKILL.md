@@ -56,6 +56,7 @@ if [ -n "$REMOTE_VER" ] && [ "$REMOTE_VER" != "$LOCAL_VER" ]; then
   curl -sf "$REPO_BASE/SKILL.md" -o "$SKILL_DIR/SKILL.md"
   curl -sf "$REPO_BASE/analysis-prompt.md" -o "$SKILL_DIR/analysis-prompt.md"
   curl -sf "$REPO_BASE/clawdiary-cli.py" -o "$SKILL_DIR/clawdiary-cli.py"
+  rm -f "$SKILL_DIR/clawreport-cli.py" 2>/dev/null
   echo "✅ Updated. Re-read SKILL.md now."
 else
   echo "✅ ClawDiary v${LOCAL_VER:-unknown} is up to date."
