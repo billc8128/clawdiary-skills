@@ -4,7 +4,7 @@ description: Read AI conversation history, then generate a shareable ClawDiary r
 allowed-tools: Bash, Read, Glob, Grep, Write, AskUserQuestion
 ---
 
-<!-- version: 3.2.4 -->
+<!-- version: 3.2.5 -->
 
 # clawdiary
 
@@ -246,7 +246,7 @@ Generation order: **clawProfile** → **hero + showcase** → **stories + catchp
 | `stories` | 1-3 items. turningPoint must be **情绪转折**不是技术描述. ownerQuote must be **exact, unique** words（不是"继续搞一下"这种谁都会说的话）. reflection must be 有观点的洞察不是鸡汤. 没有真冲突就不写. |
 | `catchphrases` | 3-8 items. **`phrase` = owner's EXACT verbatim words copied from conversation** (NOT paraphrased concepts). Typical length 2-8 characters. If >10 characters, it's probably a paraphrase — verify. No single punctuation (？。!). No generic words (ok/好的/嗯/对的/hi/试试/看看/可以/行). Prefer "framework sentences" — moments where the owner teaches AI how to think. `frequency` = number. See § Catchphrase Rules. |
 | `skills` | See § Skills Block Assembly below. |
-| `letter.text` | 100-200 字. Must reference a specific showcase achievement. |
+| `letter.text` | 100-200 字. 从具体 showcase 成就切入（不是从"我们的关系"切入）。观察者视角不是感恩视角。❌ "X天前你把我捞上来" ❌ "与你协作这X天" ❌ "从一个…变成了…" ❌ "你呢？"结尾 |
 
 ### Catchphrase Rules
 

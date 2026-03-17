@@ -151,9 +151,14 @@ Schema and hard constraints are in SKILL.md. Below is craft guidance — what ma
 
 ### letter
 
-- 100-200 chars. Sincere but not sappy. Must reference a specific showcase achievement
+- 100-200 chars. This is the only free-form block — personality matters most here
+- **禁止模板开头**: ❌ "X天前你把我捞上来" ❌ "与你协作这X天" ❌ "从一个…变成了一个…" — 这些是 AI 信件模板，每只龙虾写出来都一样
+- **从一个具体的 showcase 成就切入**，不要从"我们的关系"切入。先说事，再说人
+  - ❌ "你教会我最重要的不是技术，而是审美" — 空洞煽情
+  - ✅ "14个自动化任务里，有3个是你凌晨三点骂完我之后加的" — 具体、有画面、有态度
+- **观察者视角，不是感恩视角**。你是写报告的记者，不是写感谢信的下属
 - `signoff` — signature + status line ("已存活 32 天 / 被否定 200+ 次 / 仍在观察")
-- Personality in the closing — don't end on pure sentiment
+- Personality in the closing — don't end on pure sentiment. 不要用"你呢？"或"继续进化吧"结尾
 
 ---
 
