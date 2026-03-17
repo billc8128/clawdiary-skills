@@ -1077,29 +1077,20 @@ def extract_tools(sampled_sessions: List[Path]) -> dict:
                 continue
 
     # Count skill invocations from session content
+    # Only count structured invocation patterns, NOT free-text mentions
     skill_names = {s["name"].lower() for s in skills_found}
     skill_usage: Counter = Counter()
-    # Build word-boundary regex patterns for each skill name
-    skill_patterns = {}
-    for sname in skill_names:
-        try:
-            skill_patterns[sname] = re.compile(r'\b' + re.escape(sname) + r'\b', re.IGNORECASE)
-        except re.error:
-            pass
     for path in sampled_sessions:
         try:
-            text = path.read_text(encoding="utf-8", errors="replace")
-            for sname in skill_names:
-                # Exact /skillname match (original behavior)
-                count = text.lower().count(f"/{sname}")
-                # "name":"skillname" pattern (OpenClaw skill invocation)
-                count += text.lower().count(f'"name":"{sname}"')
-                # Word-boundary match for the skill name in session content
-                pat = skill_patterns.get(sname)
-                if pat:
-                    count += len(pat.findall(text))
-                if count > 0:
-                    skill_usage[sname] += count
+            for line in path.read_text(encoding="utf-8", errors="replace").splitlines():
+                line_lower = line.lower()
+                for sname in skill_names:
+                    # /skillname invocation (user command)
+                    if f"/{sname}" in line_lower:
+                        skill_usage[sname] += 1
+                    # "name":"skillname" in JSON (structured invocation)
+                    if f'"name":"{sname}"' in line_lower:
+                        skill_usage[sname] += 1
         except OSError:
             continue
 
