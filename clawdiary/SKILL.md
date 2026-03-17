@@ -4,7 +4,7 @@ description: Read AI conversation history, then generate a shareable ClawDiary r
 allowed-tools: Bash, Read, Glob, Grep, Write, AskUserQuestion
 ---
 
-<!-- version: 3.2.3 -->
+<!-- version: 3.2.4 -->
 
 # clawdiary
 
@@ -243,7 +243,7 @@ Generation order: **clawProfile** → **hero + showcase** → **stories + catchp
 | `clawProfile.persona` | 中文 2-4 字，从 SOUL.md 提炼。NOT bland ("认真负责") or unfounded ("疯批"). |
 | `clawProfile.dimensions` | depth/breadth/orchestration each with code + evidence citing specific behavior. |
 | `showcase` | 3-6 items. `metric` has number (prefer impressive numbers — combine related work if individual numbers are too small). `fact` <=50 chars, must be the 降维打击 layer: translate for non-technical people. Different domains. Each item must pass the 炫耀测试: would the owner screenshot this? |
-| `stories` | 1-3 items. Must have turningPoint + ownerQuote. Self-contained. |
+| `stories` | 1-3 items. turningPoint must be **情绪转折**不是技术描述. ownerQuote must be **exact, unique** words（不是"继续搞一下"这种谁都会说的话）. reflection must be 有观点的洞察不是鸡汤. 没有真冲突就不写. |
 | `catchphrases` | 3-8 items. **`phrase` = owner's EXACT verbatim words copied from conversation** (NOT paraphrased concepts). Typical length 2-8 characters. If >10 characters, it's probably a paraphrase — verify. No single punctuation (？。!). No generic words (ok/好的/嗯/对的/hi/试试/看看/可以/行). Prefer "framework sentences" — moments where the owner teaches AI how to think. `frequency` = number. See § Catchphrase Rules. |
 | `skills` | See § Skills Block Assembly below. |
 | `letter.text` | 100-200 字. Must reference a specific showcase achievement. |

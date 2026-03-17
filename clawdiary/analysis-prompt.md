@@ -115,10 +115,20 @@ Schema and hard constraints are in SKILL.md. Below is craft guidance — what ma
 ### stories
 
 - `turningPoint` is the core — no conflict = no story, don't write it
-- `ownerQuote` must be from the turning moment, not a generic quote
+  - turningPoint 必须是**情绪转折**，不是技术描述。"三次补丁尝试" 是流水账。"等了一小时发现什么都没产出，直接骂了" 才是转折
+  - Bad: "先补cognitiveStyle对象，再补capabilityRings数组" — 这是 changelog 不是故事
+  - Good: "用户说了句'你是傻逼吗'——不是真骂，但一小时白等的愤怒是真的"
+- `ownerQuote` must be **the exact words from the turning moment, uniquely this person**
+  - ❌ "这个继续搞一下" — 谁都会说，零信息量
+  - ✅ "所有研究任务强制两阶段" — 这才是 owner 被逼出来的真实决策
+  - If you can't find a specific, interesting quote from that moment, don't force a generic one — pick a different story
 - `reflection` must be non-obvious insight (not "this shows they work hard")
+  - ❌ "从错误中学习比避免错误更重要" — 鸡汤，任何人都能写
+  - ❌ "schema适配能力是AI基础设施的关键" — 技术总结，不是洞察
+  - ✅ "完美主义是ADHD的陷阱" — 有观点、有对象、有判断
 - Each story is self-contained — readable without the rest of the report
 - `dateRange` and `theme` (breakthrough|transformation|persistence|serendipity)
+- **选择标准**: 只写有真实冲突+情绪的故事。如果一件事只是"遇到问题→解决了"，它不是故事，是 ticket
 
 ### catchphrases
 
