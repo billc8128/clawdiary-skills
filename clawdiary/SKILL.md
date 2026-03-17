@@ -25,6 +25,11 @@ Skip non-fatal errors (unparseable session, undetermined field). Only stop for f
 2. Read `analysis-prompt.md` at Step 2 — it contains the analytical framework for quality generation
 3. Do NOT skip these reads. Skipping them causes wrong field names, missing blocks, and validation failures
 
+**⚠️ Context Compaction / Resume:** If you are resuming after a context compaction or in a new heartbeat cycle:
+- **ALWAYS re-run Step 1 (`prepare`)** — even if `_cr_parts/` already exists. The data may be stale.
+- **NEVER skip `prepare` because `_cr_parts` exists.** `prepare` is idempotent and fast. Stale data = wrong report.
+- After `prepare` completes, proceed normally through Steps 2-4.
+
 ---
 
 ## Step 1: Prepare (CLI)
@@ -77,6 +82,13 @@ python3 "$SKILL_DIR/clawdiary-cli.py" prepare
 ### 1d. Incremental Support
 
 The CLI automatically fetches the existing report during prepare (no `--claw-id` needed). If `_cr_parts/existing-report.json` exists after prepare, incremental mode is active.
+
+**What "incremental" means:**
+- `_cr_parts/` data files (activity.json, tools.json, etc.) are **always fresh** — `prepare` regenerates them every time
+- `existing-report.json` is the **previously published report** — used as reference for merge decisions (names, stories, level)
+- You generate a **complete new report** using fresh data, with merge rules applied to preserve good content from the old report
+
+**What incremental does NOT mean:** reusing old `_cr_parts` data without re-running prepare.
 
 Print status: `[1/4] Prepare complete ({tier} tier): {sampled} sessions sampled.`
 

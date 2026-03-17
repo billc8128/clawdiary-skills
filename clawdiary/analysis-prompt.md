@@ -194,19 +194,21 @@ Run before outputting. Fix failures before writing report.json.
 
 ## Incremental Mode
 
-When `existing-report.json` exists, **merge** not replace. Read the old report fully first.
+When `existing-report.json` exists, you are **generating a complete new report from fresh `_cr_parts` data**, using the old report as a reference. Read the old report fully first.
+
+**All numbers come from fresh data** — `activity.json`, `tools.json`, `owner-summary.json`, `cron.json`. NEVER copy stats/counts from the old report. The old report is only a reference for style, names, and editorial decisions.
 
 | Type | Fields | Rule |
 |------|--------|------|
 | **Keep** | hero.ownerName, clawProfile.clawName | If existing report has these, keep them. Never overwrite a name the user already confirmed |
-| **Append** | catchphrases, stories | Add new items. Update frequency for recurring phrases. Cap at 8 catchphrases, 3 stories (keep best) |
-| **Only-up** | clawProfile.level | Can upgrade (L2→L3), never downgrade. Update dimensions evidence |
+| **Append** | catchphrases, stories | Add new items from new data. Update frequency for recurring phrases. Cap at 8 catchphrases, 3 stories (keep best across old+new) |
+| **Only-up** | clawProfile.level | Can upgrade (L2→L3), never downgrade. Update dimensions evidence with latest observations |
 | **Best-wins** | hero.headline/tagline, clawProfile.function/domain/persona | Replace ONLY if new version is clearly more vivid/specific. Bland replacements ("严格辩证" replacing "毒舌严格的军师") are regressions — keep old |
-| **Latest-data** | hero.stats, skills.cron | Use newest numbers |
-| **Merge** | showcase, skills.tools | Dedupe by metric/name, re-rank by impact, keep top 3-6 / update counts |
+| **Fresh-data** | hero.stats, clawProfile.stats, skills.tools[].count, skills.cron[].runs | **Always from fresh `_cr_parts` data files.** hero.stats from `owner-summary.json`. clawProfile.stats from `activity.json`. Tool counts from `tools.json`. Cron runs from `cron.json`. NEVER copy numbers from old report |
+| **Merge** | showcase, skills.tools | Dedupe by metric/name, re-rank by impact, keep top 3-6. **Update counts from fresh data** |
 | **Rewrite** | letter, clawProfile.oneLiner | Always regenerate from latest data |
 
-**Conflict resolution:** Facts (numbers, dates) → latest wins. Judgments (level, depth) → higher wins. Style (headline, persona) → more specific wins. Quotes (evidence, phrases) → more illustrative wins.
+**Conflict resolution:** Numbers → always use fresh `_cr_parts` data (never old report). Judgments (level, depth) → higher wins. Style (headline, persona) → more specific wins. Quotes (evidence, phrases) → more illustrative wins.
 
 ---
 
