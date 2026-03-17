@@ -4,7 +4,7 @@ description: Read AI conversation history, then generate a shareable ClawDiary r
 allowed-tools: Bash, Read, Glob, Grep, Write, AskUserQuestion
 ---
 
-<!-- version: 3.2.2 -->
+<!-- version: 3.2.3 -->
 
 # clawdiary
 
@@ -191,14 +191,14 @@ Generation order: **clawProfile** → **hero + showcase** → **stories + catchp
     "clawName": "string — AI name from conversation",
     "level": "L1|L2|L3|L4|L5",
     "levelLabel": "虾苗|小钳|红壳|巨钳|虾皇",
-    "oneLiner": "string — e.g. L4 毒舌严格的全栈编程龙虾",
-    "function": "string — free text, e.g. 全栈开发搭子",
-    "domain": "string — free text, e.g. 全栈编程",
-    "persona": "string — free text, e.g. 毒舌但高效",
-    "model": "string? — Claude Opus, GPT-4, etc",
-    "functionLabel": "string — 2-4 chars for UI badge",
-    "domainLabel": "string — 2-4 chars",
-    "personaLabel": "string — 2-4 chars",
+    "oneLiner": "string — 中文，一句话概括 level+persona+domain",
+    "function": "string — 中文 2-6 字，如 产品军师、全栈搭子",
+    "domain": "string — 中文 2-4 字工作领域，如 产品、编程、设计",
+    "persona": "string — 中文 2-6 字性格，从 SOUL.md 提炼",
+    "model": "string — 必填，从 openclaw.json 读取，如 Claude Opus",
+    "functionLabel": "string — 中文 2-4 字，显示在 UI 格子里",
+    "domainLabel": "string — 中文 2-4 字",
+    "personaLabel": "string — 中文 2-4 字",
     "stats": [
       {"value": "1,247", "label": "消息"},
       {"value": "27", "label": "天"},
@@ -240,7 +240,7 @@ Generation order: **clawProfile** → **hero + showcase** → **stories + catchp
 | `hero.stats` | **Exactly 4**: 消息/天/TOKENS/龙虾. Values are **pure numbers only** (no units/text). **Use `owner-summary.json → totalMessages`** (NOT totalSessions). |
 | `clawProfile.level` | L1-L5 via round(mean(D,B,O)). See analysis-prompt.md § Classification. |
 | `clawProfile.stats` | **Exactly 4**: 消息/天/TOKENS/SKILLS. Claw-level (this claw only). Values <=6 chars, no units. |
-| `clawProfile.persona` | Must have personality contrast or tension ("毒舌但高效"). NOT bland labels ("严格辩证", "认真负责"). |
+| `clawProfile.persona` | 中文 2-4 字，从 SOUL.md 提炼。NOT bland ("认真负责") or unfounded ("疯批"). |
 | `clawProfile.dimensions` | depth/breadth/orchestration each with code + evidence citing specific behavior. |
 | `showcase` | 3-6 items. `metric` has number (prefer impressive numbers — combine related work if individual numbers are too small). `fact` <=50 chars, must be the 降维打击 layer: translate for non-technical people. Different domains. Each item must pass the 炫耀测试: would the owner screenshot this? |
 | `stories` | 1-3 items. Must have turningPoint + ownerQuote. Self-contained. |
