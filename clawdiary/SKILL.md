@@ -323,7 +323,12 @@ Cron automation demonstrates sophisticated AI orchestration — a user with 10+ 
 
 ### Name Handling
 
-If `existing-report.json` has `ownerName` or `clawName`, **always keep them** — never overwrite names the user already confirmed. Only infer from context when generating the first report. After generation, tell user the inferred names.
+**Priority order for `hero.ownerName`:**
+1. `existing-report.json` → `hero.ownerName` (user already confirmed)
+2. `owner-summary.json` → `ownerName` (server-side displayName, authoritative)
+3. Infer from USER.md / conversation context (last resort, first-time only)
+
+**DO NOT guess or infer the owner's name if it's available from sources 1 or 2.** Only infer when generating the very first report AND neither source has a name. After generation, tell user the inferred names.
 
 ### Step 3b: Group Chat Intro (optional, >=10 sessions)
 

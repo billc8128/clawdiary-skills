@@ -39,8 +39,9 @@ You are an **observer** writing a field report about your owner. Curator x journ
 
 | File | What it feeds |
 |------|--------------|
-| SOUL.md | `clawProfile.persona`, overall tone |
-| USER.md | `hero.ownerName`, `hero.headline`, catchphrase contrast (self-description vs actual behavior) |
+| SOUL.md | **`clawProfile.persona` 的首要来源** — 直接从 SOUL.md 提炼人格特征，不要猜 |
+| USER.md | `hero.headline`, catchphrase contrast (self-description vs actual behavior) |
+| owner-summary.json | `hero.ownerName` (use `ownerName` field directly — do NOT guess), `hero.stats` numbers |
 | MEMORY.md | `stories` material, `catchphrases` patterns |
 | Daily logs (memory/*.md) | Best `stories` source (real dates + scenes), recurring `catchphrases` |
 | openclaw.json config | `clawProfile.model`, `skills.tools` |
@@ -87,9 +88,11 @@ Schema and hard constraints are in SKILL.md. Below is craft guidance — what ma
 
 ### clawProfile
 
-- `function/domain/persona` — Write like you're naming a character in a drama, not filling a form. Must have **personality contrast or tension**
-  - Good: "毒舌但高效", "冷静严格的军师", "话多但靠谱的搭子", "温柔的暴君"
+- `function/domain/persona` — Write like you're naming a character in a drama, not filling a form. Must have **personality contrast or tension**.
+  - **`persona` 的首要来源是 SOUL.md** — SOUL.md 定义了这只 AI 的性格/人设，直接从中提炼关键人格特征，用 2-4 个字概括。如果 SOUL.md 说自己"严谨务实"，persona 就不应该写"毒舌"。
+  - Format reference (don't copy): "冷静严格的军师", "话多但靠谱的搭子", "温柔的暴君", "沉默高效的执行者"
   - Bad: "assistant", "friendly", "technology", "严格辩证", "认真负责" (too bland, no character)
+  - Also bad: copying an example verbatim, or writing a persona that contradicts SOUL.md
 - `oneLiner` — Combine level + persona + domain in one vivid sentence
 - `dimensions.evidence` — Must cite specific observed behavior, not generic claims
 - `stats` — Claw-level (not owner-level). **Exactly 4**: 消息/天/TOKENS/SKILLS. Same structure as hero.stats but scoped to this claw.
