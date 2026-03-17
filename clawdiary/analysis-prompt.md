@@ -111,10 +111,11 @@ Schema and hard constraints are in SKILL.md. Below is craft guidance — what ma
 
 - **DO NOT summarize or synthesize. Copy-paste the owner's EXACT words ONLY.** If you cannot locate the exact line in session data, do not include it.
 - Pick expressions that are **uniquely this person** — hearing it, you'd know who said it
+- **Framework sentences over filler words** — Look for moments where the owner teaches the AI how to think: decision principles ("先想清楚目标函数"), quality standards ("这个不够 Jobs 级"), working methods ("先微步一下"). These reveal the owner's unique thinking patterns and are much more interesting than generic words.
 - Catchphrases should be **SHORT** (2-8 characters typical). If your phrase is longer than 10 characters, it's almost certainly a paraphrase — go back and find the real short expression
 - `clawInterpretation` uses guess perspective and should reveal something impressive, not just be funny
 - Consider: some "？" messages may be connectivity tests, not questions (early platform instability)
-- Exclude: single punctuation, generic words (ok/好的/嗯/gkd), pure functional commands, concept labels you invented, English translations of Chinese phrases
+- **Hard exclude list**: single punctuation, greetings (hi/hello/hey), affirmations (ok/好的/嗯/对的/可以/行), fillers (试试/看看/gkd), pure functional commands. These tell you nothing about who this person is — anyone says them. If swapping the owner with someone else wouldn't change the phrase, it's too generic.
 
 ### skills
 

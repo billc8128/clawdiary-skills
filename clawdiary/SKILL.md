@@ -242,7 +242,7 @@ Generation order: **clawProfile** → **hero + showcase** → **stories + catchp
 | `clawProfile.dimensions` | depth/breadth/orchestration each with code + evidence citing specific behavior. |
 | `showcase` | 3-6 items. `metric` has number (prefer impressive numbers — combine related work if individual numbers are too small). `fact` <=50 chars, must be the 降维打击 layer: translate for non-technical people. Different domains. Each item must pass the 炫耀测试: would the owner screenshot this? |
 | `stories` | 1-3 items. Must have turningPoint + ownerQuote. Self-contained. |
-| `catchphrases` | 3-8 items. **`phrase` = owner's EXACT verbatim words copied from conversation** (NOT paraphrased concepts). Typical length 2-8 characters. If >10 characters, it's probably a paraphrase — verify. No single punctuation (？。!). No generic words (ok/好的/嗯). `frequency` = number. See § Catchphrase Rules. |
+| `catchphrases` | 3-8 items. **`phrase` = owner's EXACT verbatim words copied from conversation** (NOT paraphrased concepts). Typical length 2-8 characters. If >10 characters, it's probably a paraphrase — verify. No single punctuation (？。!). No generic words (ok/好的/嗯/对的/hi/试试/看看/可以/行). Prefer "framework sentences" — moments where the owner teaches AI how to think. `frequency` = number. See § Catchphrase Rules. |
 | `skills` | See § Skills Block Assembly below. |
 | `letter.text` | 100-200 字. Must reference a specific showcase achievement. |
 

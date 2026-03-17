@@ -1077,19 +1077,25 @@ def extract_tools(sampled_sessions: List[Path]) -> dict:
                 continue
 
     # Count skill invocations from session content
-    # Only count structured invocation patterns, NOT free-text mentions
+    # Only count actual invocations, not file paths or free-text mentions
     skill_names = {s["name"].lower() for s in skills_found}
     skill_usage: Counter = Counter()
+    # Build patterns: match /skillname at word boundary (not in file paths)
+    # e.g. "/clawdiary" as command, not "/skills/clawdiary/SKILL.md"
+    invoke_patterns = {}
+    for sname in skill_names:
+        # Match "/skillname" only when preceded by start-of-line, space, or quote
+        # and followed by end, space, quote, or backslash (not a path separator)
+        invoke_patterns[sname] = re.compile(
+            r'(?:^|[\s"\'`])/' + re.escape(sname) + r'(?:[\s"\'`\\]|$)',
+            re.IGNORECASE
+        )
     for path in sampled_sessions:
         try:
             for line in path.read_text(encoding="utf-8", errors="replace").splitlines():
-                line_lower = line.lower()
                 for sname in skill_names:
-                    # /skillname invocation (user command)
-                    if f"/{sname}" in line_lower:
-                        skill_usage[sname] += 1
-                    # "name":"skillname" in JSON (structured invocation)
-                    if f'"name":"{sname}"' in line_lower:
+                    pat = invoke_patterns.get(sname)
+                    if pat and pat.search(line):
                         skill_usage[sname] += 1
         except OSError:
             continue
