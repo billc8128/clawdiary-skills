@@ -661,6 +661,31 @@ def extract_usage_from_jsonl(path: Path) -> dict:
     return usage
 
 
+def count_messages_in_session(path: Path) -> int:
+    """Count human/user messages in a JSONL session file (fast scan)."""
+    count = 0
+    try:
+        with open(path, "r", encoding="utf-8", errors="replace") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    obj = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+                role = obj.get("role")
+                if not role:
+                    msg = obj.get("message")
+                    if isinstance(msg, dict):
+                        role = msg.get("role")
+                if role in ("user", "human"):
+                    count += 1
+    except OSError:
+        pass
+    return count
+
+
 def extract_activity(all_sessions: List[Path]) -> dict:
     """Build per-day activity data from ALL sessions."""
     cache = {}
@@ -677,6 +702,7 @@ def extract_activity(all_sessions: List[Path]) -> dict:
     next_cache = {}
     days: Dict[str, dict] = defaultdict(lambda: {"sessions": 0, "tokens": 0, "timestamps": []})
     total_tokens = 0
+    total_messages = 0
     total_usage = {"input": 0, "cacheRead": 0, "cacheWrite": 0, "output": 0}
 
     for path in all_sessions:
@@ -689,14 +715,16 @@ def extract_activity(all_sessions: List[Path]) -> dict:
 
         fp = fingerprint(spath, size, mtime)
         cached = cache.get(spath)
-        if isinstance(cached, dict) and cached.get("fp") == fp and isinstance(cached.get("tokens"), int):
+        if isinstance(cached, dict) and cached.get("fp") == fp and isinstance(cached.get("tokens"), int) and "messages" in cached:
             tokens = cached["tokens"]
+            msgs = cached.get("messages", 0)
             # Also restore cached usage breakdown
             for k in ("input", "cacheRead", "cacheWrite", "output"):
                 total_usage[k] += cached.get(k, 0)
         else:
             u = extract_usage_from_jsonl(path)
             tokens = u["total"]
+            msgs = count_messages_in_session(path)
             if tokens == 0:
                 # Fallback: word count for non-JSONL or empty usage
                 try:
@@ -707,12 +735,13 @@ def extract_activity(all_sessions: List[Path]) -> dict:
             else:
                 for k in ("input", "cacheRead", "cacheWrite", "output"):
                     total_usage[k] += u[k]
-            next_cache[spath] = {"fp": fp, "tokens": tokens,
+            next_cache[spath] = {"fp": fp, "tokens": tokens, "messages": msgs,
                                  "input": u["input"], "cacheRead": u["cacheRead"],
                                  "cacheWrite": u["cacheWrite"], "output": u["output"]}
         total_tokens += tokens
+        total_messages += msgs
         if spath not in next_cache:
-            next_cache[spath] = {"fp": fp, "tokens": tokens}
+            next_cache[spath] = {"fp": fp, "tokens": tokens, "messages": msgs}
 
         timestamps = extract_timestamps(path)
         if not timestamps:
@@ -770,6 +799,7 @@ def extract_activity(all_sessions: List[Path]) -> dict:
     result["summary"] = {
         "totalDays": len(result["days"]),
         "totalSessions": len(all_sessions),
+        "totalMessages": total_messages,
         "totalTokens": total_tokens,
         "usage": {
             "input": total_usage["input"],
@@ -1350,7 +1380,7 @@ def cmd_prepare(args: argparse.Namespace) -> None:
             return f"{n / 1e3:.1f}K"
         return str(n)
 
-    log(f"  {summary['totalDays']} days, {summary['totalSessions']} sessions, {fmt_tokens(summary['totalTokens'])} tokens")
+    log(f"  {summary['totalDays']} days, {summary['totalSessions']} sessions, {summary.get('totalMessages', 0)} messages, {fmt_tokens(summary['totalTokens'])} tokens")
     usage = summary.get("usage", {})
     if usage.get("output", 0) > 0:
         log(f"  Token breakdown: input={fmt_tokens(usage['input'])}, cache_read={fmt_tokens(usage['cacheRead'])}, cache_write={fmt_tokens(usage['cacheWrite'])}, output={fmt_tokens(usage['output'])}")
@@ -1468,7 +1498,7 @@ def cmd_prepare(args: argparse.Namespace) -> None:
             os_data = load_json(owner_summary_path)
             act_data = load_json(activity_path)
             local_tokens = act_data.get("summary", {}).get("totalTokens", 0)
-            local_sessions = act_data.get("summary", {}).get("totalSessions", 0)
+            local_messages = act_data.get("summary", {}).get("totalMessages", 0)
             local_days = act_data.get("summary", {}).get("totalDays", 0)
             # Find this claw's entry in owner-summary and compare
             claws = os_data.get("claws", [])
@@ -1483,11 +1513,11 @@ def cmd_prepare(args: argparse.Namespace) -> None:
                     if local_tokens > old_tokens * 1.1:  # >10% larger means stale
                         token_diff = local_tokens - old_tokens
                         claw_entry["tokens"] = local_tokens
-                        claw_entry["messages"] = max(claw_entry.get("messages", 0), local_sessions)
+                        claw_entry["messages"] = max(claw_entry.get("messages", 0), local_messages)
                         claw_entry["days"] = max(claw_entry.get("days", 0), local_days)
                         # Update totals
                         os_data["totalTokens"] = os_data.get("totalTokens", 0) + token_diff
-                        os_data["totalMessages"] = max(os_data.get("totalMessages", 0), local_sessions)
+                        os_data["totalMessages"] = max(os_data.get("totalMessages", 0), local_messages)
                         os_data["totalDays"] = max(os_data.get("totalDays", 0), local_days)
                         patched = True
                         log(f"  Patched owner-summary tokens: {fmt_tokens(old_tokens)} → {fmt_tokens(local_tokens)} (local data is more accurate)")

@@ -141,10 +141,12 @@ This prevents context overflow from loading all sessions at once. **Do NOT skip 
 ### 2f. Read owner summary (cross-claw aggregation)
 
 If `_cr_parts/owner-summary.json` exists, use it for `hero.stats`:
-- `totalMessages` → hero.stats[0] (消息)
-- `totalDays` → hero.stats[1] (天)
-- `totalTokens` → hero.stats[2] (TOKENS)
+- `totalMessages` → hero.stats[0] (消息) — **human message turns, NOT session count**
+- `totalDays` → hero.stats[1] (天) — journey days
+- `totalTokens` → hero.stats[2] (TOKENS) — use K/M/B suffix (e.g. "594M")
 - `clawCount` → hero.stats[3] (龙虾)
+
+**CRITICAL**: stats values must be **pure numbers only** (e.g. "1,247", "32", "594M", "3"). ❌ NEVER put units or text in values ("156场对话", "32天", "3只"). Labels carry the unit.
 
 This file contains **owner-level aggregated data across ALL claws**, not just the current one. hero.stats must reflect the owner's total, not just this claw's numbers. Note: the web page now computes stats server-side — hero.stats in JSON is a fallback only.
 
@@ -235,7 +237,7 @@ Generation order: **clawProfile** → **hero + showcase** → **stories + catchp
 | Block | Rules |
 |-------|-------|
 | `hero.headline` | <=20 chars. No ×/+ joins. Single coherent statement. |
-| `hero.stats` | **Exactly 4**: 消息/天/TOKENS/龙虾. Values <=6 chars, no units. **Use `owner-summary.json` totals** (not this claw's numbers). |
+| `hero.stats` | **Exactly 4**: 消息/天/TOKENS/龙虾. Values are **pure numbers only** (no units/text). **Use `owner-summary.json → totalMessages`** (NOT totalSessions). |
 | `clawProfile.level` | L1-L5 via round(mean(D,B,O)). See analysis-prompt.md § Classification. |
 | `clawProfile.stats` | **Exactly 4**: 消息/天/TOKENS/SKILLS. Claw-level (this claw only). Values <=6 chars, no units. |
 | `clawProfile.persona` | Must have personality contrast or tension ("毒舌但高效"). NOT bland labels ("严格辩证", "认真负责"). |
