@@ -193,7 +193,7 @@ def ensure_auth() -> dict:
                 f"{creds['api_url']}/api/claw/status",
                 headers={"Authorization": f"Bearer {creds['api_key']}"},
             )
-            with urllib.request.urlopen(req, timeout=10) as resp:
+            with urllib.request.urlopen(req, timeout=30) as resp:
                 status = json.loads(resp.read())
             log(f"Authenticated. Status: {status.get('status', 'ok')}")
             if status.get("status") == "pending_claim":
@@ -238,7 +238,7 @@ def ensure_auth() -> dict:
         method="POST",
     )
     try:
-        with urllib.request.urlopen(req, timeout=15) as resp:
+        with urllib.request.urlopen(req, timeout=60) as resp:
             data = json.loads(resp.read())
     except Exception as e:
         die(f"Registration failed: {e}")
@@ -1314,7 +1314,7 @@ def cmd_prepare(args: argparse.Namespace) -> None:
 
         if local_version:
             req = urllib.request.Request(f"{API_URL}/skill-version", method="GET")
-            with urllib.request.urlopen(req, timeout=5) as resp:
+            with urllib.request.urlopen(req, timeout=30) as resp:
                 remote = json.loads(resp.read())
             remote_version = remote.get("version", "")
             if remote_version and remote_version != local_version:
@@ -1475,7 +1475,7 @@ def cmd_prepare(args: argparse.Namespace) -> None:
             f"{creds['api_url']}/api/report/mine/owner-summary",
             headers={"Authorization": f"Bearer {creds['api_key']}"},
         )
-        with urllib.request.urlopen(req, timeout=15) as resp:
+        with urllib.request.urlopen(req, timeout=60) as resp:
             owner_summary = json.loads(resp.read())
         save_json(PARTS_DIR / "owner-summary.json", owner_summary, indent=2)
         log(f"  Owner summary: {owner_summary['clawCount']} claws, "
@@ -1543,7 +1543,7 @@ def cmd_prepare(args: argparse.Namespace) -> None:
             f"{creds['api_url']}/api/report/mine/current",
             headers={"Authorization": f"Bearer {creds['api_key']}"},
         )
-        with urllib.request.urlopen(req, timeout=15) as resp:
+        with urllib.request.urlopen(req, timeout=60) as resp:
             existing = json.loads(resp.read())
         # Extract the reportJson from the response
         report_json = existing.get("reportJson", existing)
@@ -2234,7 +2234,7 @@ def cmd_finalize(_args: argparse.Namespace) -> None:
     )
 
     try:
-        with urllib.request.urlopen(req, timeout=30) as resp:
+        with urllib.request.urlopen(req, timeout=60) as resp:
             result = json.loads(resp.read())
         log(f"Upload response: {json.dumps(result, indent=2)}")
     except urllib.error.HTTPError as e:
@@ -2275,7 +2275,7 @@ def cmd_finalize(_args: argparse.Namespace) -> None:
                 f"{creds['api_url']}/api/claw/status",
                 headers={"Authorization": f"Bearer {creds['api_key']}"},
             )
-            with urllib.request.urlopen(req, timeout=5) as resp:
+            with urllib.request.urlopen(req, timeout=30) as resp:
                 status = json.loads(resp.read())
             if status.get("status") == "pending_claim":
                 log("")
