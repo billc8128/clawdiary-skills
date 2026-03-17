@@ -88,11 +88,11 @@ Schema and hard constraints are in SKILL.md. Below is craft guidance — what ma
 
 ### clawProfile
 
-- `function/domain/persona` — Write like you're naming a character in a drama, not filling a form. Must have **personality contrast or tension**.
-  - **`persona` 的首要来源是 SOUL.md** — SOUL.md 定义了这只 AI 的性格/人设，直接从中提炼关键人格特征，用 2-4 个字概括。如果 SOUL.md 说自己"严谨务实"，persona 就不应该写"毒舌"。
-  - Format reference (don't copy): "冷静严格的军师", "话多但靠谱的搭子", "温柔的暴君", "沉默高效的执行者"
-  - Bad: "assistant", "friendly", "technology", "严格辩证", "认真负责" (too bland, no character)
-  - Also bad: copying an example verbatim, or writing a persona that contradicts SOUL.md
+- **`function`** — AI 的职能角色（2-4字中文）：军师、执行者、搭子、助理。不要混英文。
+- **`domain`** — AI 的**工作领域**（2-4字中文）：产品、编程、设计、调研、飞书。❌ "人格"不是领域。领域是这只 AI 在帮 owner 做什么类型的工作。
+- **`persona`** — AI 的性格特征（2-4字中文）。**首要来源是 SOUL.md** — 直接从中提炼。如果 SOUL.md 说自己"严谨务实"，persona 就不应该写"毒舌"或"疯批"。
+  - Bad: "assistant", "friendly", "人格", "疯批"（无依据的夸张）, "严格辩证", "认真负责"（太平淡）
+  - Also bad: copying examples, contradicting SOUL.md, 英文混入
 - `oneLiner` — Combine level + persona + domain in one vivid sentence
 - `dimensions.evidence` — Must cite specific observed behavior, not generic claims
 - `stats` — Claw-level (not owner-level). **Exactly 4**: 消息/天/TOKENS/SKILLS. Same structure as hero.stats but scoped to this claw.
@@ -122,13 +122,16 @@ Schema and hard constraints are in SKILL.md. Below is craft guidance — what ma
 
 ### catchphrases
 
+- **这是 OWNER 的口头禅，不是 AI 的。** 只收录 role=user/human 的消息。AI 的回复（role=assistant）里的话绝对不算。
+  - ❌ "先读文件"、"收到"、"明白了"、"让我看看" — 这些是 AI 说的
+  - ✅ "Jobs 级"、"微步"、"目标函数优先" — 这些是 owner 教 AI 的话
 - **DO NOT summarize or synthesize. Copy-paste the owner's EXACT words ONLY.** If you cannot locate the exact line in session data, do not include it.
 - Pick expressions that are **uniquely this person** — hearing it, you'd know who said it
 - **Framework sentences over filler words** — Look for moments where the owner teaches the AI how to think: decision principles ("先想清楚目标函数"), quality standards ("这个不够 Jobs 级"), working methods ("先微步一下"). These reveal the owner's unique thinking patterns and are much more interesting than generic words.
 - Catchphrases should be **SHORT** (2-8 characters typical). If your phrase is longer than 10 characters, it's almost certainly a paraphrase — go back and find the real short expression
 - `clawInterpretation` uses guess perspective and should reveal something impressive, not just be funny
 - Consider: some "？" messages may be connectivity tests, not questions (early platform instability)
-- **Hard exclude list**: single punctuation, greetings (hi/hello/hey), affirmations (ok/好的/嗯/对的/可以/行), fillers (试试/看看/gkd), pure functional commands. These tell you nothing about who this person is — anyone says them. If swapping the owner with someone else wouldn't change the phrase, it's too generic.
+- **Hard exclude list**: single punctuation, greetings (hi/hello/hey), affirmations (ok/好的/嗯/对的/可以/行), fillers (试试/看看/gkd), pure functional commands, **AI responses** (收到/明白了/先读文件/让我看看/好的我来). These tell you nothing about who this person is — anyone says them. If swapping the owner with someone else wouldn't change the phrase, it's too generic.
 
 ### skills
 
@@ -179,7 +182,12 @@ Schema and hard constraints are in SKILL.md. Below is craft guidance — what ma
 **Level = round(mean(D, B, O))**
 Specialist flag: if max - min >= 2, note the strong dimension.
 Level labels: L1 虾苗, L2 小钳, L3 红壳, L4 巨钳, L5 虾皇.
-Session count is a reference signal, not a threshold.
+
+**Calibration — L4+ 必须有硬证据，不能随便给：**
+- L4 要求 D/B/O 中至少两项有 **具体行为证据**（不是"他做了很多"，而是"他纠正了 AI 的 X 决策"）
+- L3 是大多数活跃用户的合理水平。如果你找不到 D4/B4/O4 的具体行为，就是 L3
+- 消息数少（<500）、天数少（<30）、tokens 低（<50M）的 claw，L4 需要极强证据，否则最高 L3
+- **两只 claw 数据差 10 倍但同级 = 评级失败** — 有区分度才有意义
 
 ---
 
