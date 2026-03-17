@@ -164,45 +164,63 @@ Schema and hard constraints are in SKILL.md. Below is craft guidance — what ma
 
 ## Classification (D/B/O → Level)
 
+**默认 L2。往上加分需要硬证据，不是"感觉他挺厉害"。**
+
+### Data Gates（硬门槛，不满足直接封顶）
+
+| 最高可得 | 消息数 | 天数 | 条件 |
+|---------|--------|------|------|
+| L2 | <200 | <14 | 数据太少，无法判断 |
+| L3 | <500 | <30 | 可以看到一些模式，但样本不够支撑 L4 |
+| L4 | ≥500 | ≥30 | 且 D/B/O 至少两项有具体行为证据 |
+| L5 | ≥1500 | ≥60 | 且 D5/B5/O5 至少一项有不可否认的证据 |
+
+**门槛是必要条件，不是充分条件。** 500 条消息不代表 L4，但 183 条消息绝对不可能 L4。
+
 ### Depth (D1-D5) — How deep in their primary domain
 
-| Code | Behavior |
-|------|----------|
-| D1 | Follows defaults, rarely questions ("好的", "可以") |
-| D2 | Chooses between options with reasons ("用A不用B因为...") |
-| D3 | Makes architecture/system decisions ("拆成三个模块", "数据流应该...") |
-| D4 | Corrects AI with domain expertise ("这里不对，应该用...") |
-| D5 | Creates patterns AI doesn't know (teaches AI new concepts, invents methods) |
+| Code | Behavior | ❌ 不算 |
+|------|----------|---------|
+| D1 | Follows defaults, rarely questions | |
+| D2 | Chooses between options with reasons | 写配置文件（SOUL.md/设定）= D2 不是 D4 |
+| D3 | Makes architecture/system decisions | "拆成三个模块" = D3 |
+| D4 | **Corrects AI's professional judgment with domain expertise** — AI 给了一个专业方案，owner 指出具体错误并给出正确答案 | "从零写了X" 不是纠正 AI，是自己做事 |
+| D5 | Creates patterns AI doesn't know — teaches AI genuinely new concepts/methods | |
 
 ### Breadth (B1-B5) — How many domains they cross
 
-| Code | Behavior |
-|------|----------|
-| B1 | Single domain, single tool |
-| B2 | Single domain, multiple tools/methods |
-| B3 | 2-3 domains with cross-domain decisions ("后端这样设计是因为前端需要...") |
-| B4 | 4+ domains with integrated thinking (design/dev/ops/product interconnected) |
-| B5 | Cross-domain transfer (applies methods from domain A to domain B) |
+| Code | Behavior | ❌ 不算 |
+|------|----------|---------|
+| B1 | Single domain, single tool | |
+| B2 | Single domain, multiple tools/features | 同一产品的不同功能（飞书+图片+搜索）= B2 |
+| B3 | 2-3 **genuinely different** domains with cross-domain reasoning | 领域必须是独立的（编程 vs 设计 vs 运营），不是同一产品的不同模块 |
+| B4 | 4+ domains with **integrated thinking** — decisions in domain A explicitly reference constraints in domain B | "横跨多个领域"不够，要有"因为前端需要X所以后端要Y"的跨域推理 |
+| B5 | Cross-domain transfer — applies methods from domain A to domain B | |
 
 ### Orchestration (O1-O5) — How they drive AI
 
-| Code | Behavior |
-|------|----------|
-| O1 | Single-turn Q&A, accepts first answer |
-| O2 | Multi-turn refinement, asks follow-ups |
-| O3 | Gives AI strategic direction ("先做X再做Y", "用这个思路") |
-| O4 | Project manager mode (assigns tasks, reviews output, overrides decisions) |
-| O5 | Designs AI workflows (reusable prompt patterns, builds AI collaboration systems) |
+| Code | Behavior | ❌ 不算 |
+|------|----------|---------|
+| O1 | Single-turn Q&A, accepts first answer | |
+| O2 | Multi-turn refinement, asks follow-ups, questions with "?" | 发问号/催促/要求解释 = O2，不是 O4 |
+| O3 | Gives AI strategic direction ("先做X再做Y") | |
+| O4 | **Systematic** project management — assigns parallel tasks, reviews deliverables against criteria, overrides with reasoning | 偶尔否定 AI ≠ O4。O4 是持续的管理模式 |
+| O5 | Designs reusable AI workflows — prompt templates, multi-agent orchestration, AI collaboration systems | 必须是可复用的系统设计，不是一次性指令 |
 
-**Level = round(mean(D, B, O))**
+### Level Calculation
+
+**Level = round(mean(D, B, O))**，但受 Data Gates 封顶。
 Specialist flag: if max - min >= 2, note the strong dimension.
 Level labels: L1 虾苗, L2 小钳, L3 红壳, L4 巨钳, L5 虾皇.
 
-**Calibration — L4+ 必须有硬证据，不能随便给：**
-- L4 要求 D/B/O 中至少两项有 **具体行为证据**（不是"他做了很多"，而是"他纠正了 AI 的 X 决策"）
-- L3 是大多数活跃用户的合理水平。如果你找不到 D4/B4/O4 的具体行为，就是 L3
-- 消息数少（<500）、天数少（<30）、tokens 低（<50M）的 claw，L4 需要极强证据，否则最高 L3
-- **两只 claw 数据差 10 倍但同级 = 评级失败** — 有区分度才有意义
+### Anti-Inflation Checklist
+
+给 D/B/O 打分前，对每一项问自己：
+1. **"我能引用一条具体的对话记录吗？"** — 不能就降一级
+2. **"换一个普通用户，同样的操作他能不能做到？"** — 能就不是高分
+3. **"我是不是在把'用了多个功能'当成'跨领域'？"** — 同一产品的多功能 = B2，不是 B4
+4. **"我是不是在把'否定了 AI'当成'纠正了 AI 的专业判断'？"** — 说"不对重来" = O2，指出具体错误原因 = D4
+5. **183 条消息的 claw 和 1500 条消息的 claw 能同级吗？** — 不能。数据量差异必须体现在评级里
 
 ---
 

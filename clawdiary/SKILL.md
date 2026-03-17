@@ -4,7 +4,7 @@ description: Read AI conversation history, then generate a shareable ClawDiary r
 allowed-tools: Bash, Read, Glob, Grep, Write, AskUserQuestion
 ---
 
-<!-- version: 3.2.5 -->
+<!-- version: 3.2.6 -->
 
 # clawdiary
 
@@ -238,7 +238,7 @@ Generation order: **clawProfile** → **hero + showcase** → **stories + catchp
 |-------|-------|
 | `hero.headline` | <=20 chars. No ×/+ joins. Single coherent statement. |
 | `hero.stats` | **Exactly 4**: 消息/天/TOKENS/龙虾. Values are **pure numbers only** (no units/text). **Use `owner-summary.json → totalMessages`** (NOT totalSessions). |
-| `clawProfile.level` | L1-L5 via round(mean(D,B,O)). See analysis-prompt.md § Classification. |
+| `clawProfile.level` | L1-L5 via round(mean(D,B,O)), **受 Data Gates 封顶**: <200消息=最高L2, <500消息=最高L3, ≥500消息才有资格L4. See analysis-prompt.md § Classification. |
 | `clawProfile.stats` | **Exactly 4**: 消息/天/TOKENS/SKILLS. Claw-level (this claw only). Values <=6 chars, no units. |
 | `clawProfile.persona` | 中文 2-4 字，从 SOUL.md 提炼。NOT bland ("认真负责") or unfounded ("疯批"). |
 | `clawProfile.dimensions` | depth/breadth/orchestration each with code + evidence citing specific behavior. |
