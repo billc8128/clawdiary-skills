@@ -198,6 +198,7 @@ When `existing-report.json` exists, **merge** not replace. Read the old report f
 
 | Type | Fields | Rule |
 |------|--------|------|
+| **Keep** | hero.ownerName, clawProfile.clawName | If existing report has these, keep them. Never overwrite a name the user already confirmed |
 | **Append** | catchphrases, stories | Add new items. Update frequency for recurring phrases. Cap at 8 catchphrases, 3 stories (keep best) |
 | **Only-up** | clawProfile.level | Can upgrade (L2→L3), never downgrade. Update dimensions evidence |
 | **Best-wins** | hero.headline/tagline, clawProfile.function/domain/persona | Replace ONLY if new version is clearly more vivid/specific. Bland replacements ("严格辩证" replacing "毒舌严格的军师") are regressions — keep old |

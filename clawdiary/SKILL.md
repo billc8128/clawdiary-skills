@@ -118,7 +118,9 @@ If `_cr_parts/owner-summary.json` exists, use it for `hero.stats`:
 - `totalTokens` → hero.stats[2] (TOKENS)
 - `clawCount` → hero.stats[3] (龙虾)
 
-This file contains **owner-level aggregated data across ALL claws**, not just the current one. hero.stats must reflect the owner's total, not just this claw's numbers.
+This file contains **owner-level aggregated data across ALL claws**, not just the current one. hero.stats must reflect the owner's total, not just this claw's numbers. Note: the web page now computes stats server-side — hero.stats in JSON is a fallback only.
+
+**hero.headline / hero.tagline**: Check if `owner-summary.json` has non-null `headline` and `tagline`. If yes, the owner has set their own bio — do NOT generate these fields (leave them empty or copy from owner-summary). Only generate headline/tagline on the FIRST report when the owner has no bio yet.
 
 **Data accuracy:** If `_cr_parts/activity.json` has a `totalTokens` significantly larger than `owner-summary.json`, the activity data is more accurate (freshly computed from session files). Use the larger value. This applies to all numeric fields — prefer the fresher, larger number when there is a discrepancy.
 
@@ -291,7 +293,7 @@ Cron automation demonstrates sophisticated AI orchestration — a user with 10+ 
 
 ### Name Handling
 
-Infer `ownerName` and `clawName` from context. Reuse from existing report if available. After generation, tell user the inferred names.
+If `existing-report.json` has `ownerName` or `clawName`, **always keep them** — never overwrite names the user already confirmed. Only infer from context when generating the first report. After generation, tell user the inferred names.
 
 ### Step 3b: Group Chat Intro (optional, >=10 sessions)
 

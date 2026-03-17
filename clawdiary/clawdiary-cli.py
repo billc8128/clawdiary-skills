@@ -1006,7 +1006,7 @@ def query_memory_db(limit: int) -> List[dict]:
             ["sqlite3", "-json", str(MEMORY_DB_PATH), query],
             stderr=subprocess.DEVNULL,
             timeout=10,
-            text=True,
+            universal_newlines=True,
         )
         if result.strip():
             return json.loads(result)
@@ -1123,7 +1123,7 @@ def detect_routines() -> List[dict]:
 
     # crontab — only openclaw/claw keywords
     try:
-        cron = subprocess.check_output(["crontab", "-l"], stderr=subprocess.DEVNULL, text=True)
+        cron = subprocess.check_output(["crontab", "-l"], stderr=subprocess.DEVNULL, universal_newlines=True)
         for line in cron.strip().split("\n"):
             line = line.strip()
             if line and not line.startswith("#"):
