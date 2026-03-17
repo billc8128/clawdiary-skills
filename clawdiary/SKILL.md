@@ -100,9 +100,25 @@ Read `_cr_parts/workspace.json` — contains SOUL.md, USER.md, MEMORY.md, IDENTI
 - `_cr_parts/config.json` → clawProfile.model, skills.tools
 - `_cr_parts/cron.json` → skills.cron
 
-### 2d. Read compressed sessions
+### 2d. Read compressed sessions (BATCH MODE)
 
-Read all `_cr_parts/compressed/session_*.json`. Observe: characteristic phrases, memorable interactions, working patterns, what makes this owner unique.
+Read `_cr_parts/compressed/session_*.json` **in batches of 5 files**. After each batch, write down notes before reading the next batch:
+
+```
+Batch 1: session_000 ~ session_004 → read → take notes
+Batch 2: session_005 ~ session_009 → read → take notes
+...repeat until all files are read
+```
+
+**After each batch, write brief notes** (in your response, not to a file) covering:
+- Characteristic phrases / catchphrase candidates (exact quotes)
+- Memorable interactions / story-worthy moments
+- Showcase-worthy achievements with concrete numbers
+- Working patterns, personality traits
+
+This prevents context overflow from loading all sessions at once. **Do NOT skip files** — every session may contain unique signals. First, list all files: `ls _cr_parts/compressed/` to know the total count, then read in batches.
+
+**If you notice context getting tight** (compaction warnings), summarize your notes so far into a compact list and continue with remaining files.
 
 ### 2e. Read quantitative data
 
