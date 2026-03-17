@@ -213,6 +213,15 @@ def ensure_auth() -> dict:
                 die("Claw not claimed. Claim it first, then re-run.")
             _save_known_claw(creds)
             return creds
+        except urllib.error.HTTPError as e:
+            if e.code in (401, 403, 404):
+                log(f"  Credentials invalid (HTTP {e.code}). Clearing and re-registering...")
+                CRED_FILE.unlink(missing_ok=True)
+                # Fall through to registration below
+            else:
+                log(f"  Status check failed (HTTP {e.code}), continuing with cached creds")
+                _save_known_claw(creds)
+                return creds
         except Exception as e:
             log(f"  Status check failed ({e}), continuing with cached creds")
             _save_known_claw(creds)
