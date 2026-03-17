@@ -257,8 +257,8 @@ When `existing-report.json` exists, you are **generating a complete new report f
 |------|--------|------|
 | **Keep** | hero.ownerName, clawProfile.clawName | If existing report has these, keep them. Never overwrite a name the user already confirmed |
 | **Append** | catchphrases, stories | Add new items from new data. Update frequency for recurring phrases. Cap at 8 catchphrases, 3 stories (keep best across old+new) |
-| **Only-up** | clawProfile.level | Can upgrade (L2→L3), never downgrade. Update dimensions evidence with latest observations |
-| **Best-wins** | hero.headline/tagline, clawProfile.function/domain/persona | Replace ONLY if new version is clearly more vivid/specific. Bland replacements ("严格辩证" replacing "毒舌严格的军师") are regressions — keep old |
+| **Recalculate** | clawProfile.level | Recalculate from fresh data using Data Gates + D/B/O scoring. **Can go down** if old level was inflated (e.g. old L4 with <500 messages → new L2/L3). Update dimensions evidence |
+| **Best-wins** | hero.headline/tagline, clawProfile.function/domain/persona | Replace if new version is more vivid/specific. **BUT: 旧值违反规则必须替换** — 工具名做 function/domain（飞书/Notion）、"人格"做 domain、无依据 persona（疯批）→ 必须用新值覆盖，不管旧值多"生动" |
 | **Fresh-data** | hero.stats, clawProfile.stats, skills.tools[].count, skills.cron[].runs | **Always from fresh `_cr_parts` data files.** hero.stats from `owner-summary.json`. clawProfile.stats from `activity.json`. Tool counts from `tools.json`. Cron runs from `cron.json`. NEVER copy numbers from old report |
 | **Merge** | showcase, skills.tools | Dedupe by metric/name, re-rank by impact, keep top 3-6. **Update counts from fresh data** |
 | **Rewrite** | letter, clawProfile.oneLiner | Always regenerate from latest data |

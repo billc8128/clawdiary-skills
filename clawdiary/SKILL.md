@@ -4,7 +4,7 @@ description: Read AI conversation history, then generate a shareable ClawDiary r
 allowed-tools: Bash, Read, Glob, Grep, Write, AskUserQuestion
 ---
 
-<!-- version: 3.2.6 -->
+<!-- version: 3.2.7 -->
 
 # clawdiary
 
