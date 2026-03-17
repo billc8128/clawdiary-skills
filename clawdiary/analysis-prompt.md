@@ -164,63 +164,78 @@ Schema and hard constraints are in SKILL.md. Below is craft guidance — what ma
 
 ## Classification (D/B/O → Level)
 
-**默认 L2。往上加分需要硬证据，不是"感觉他挺厉害"。**
+**⚠️ 定级是整份报告最重要的判断，必须极度严格。宁低勿高。**
 
-### Data Gates（硬门槛，不满足直接封顶）
+**核心原则：默认 L2，每升一级都需要不可辩驳的证据。** 没有证据 = L2。有一点证据 = L2。有明确证据但数据量不够 = L3。只有数据量充足 + 多维硬证据才能 L4+。
 
-| 最高可得 | 消息数 | 天数 | 条件 |
-|---------|--------|------|------|
-| L2 | <200 | <14 | 数据太少，无法判断 |
-| L3 | <500 | <30 | 可以看到一些模式，但样本不够支撑 L4 |
-| L4 | ≥500 | ≥30 | 且 D/B/O 至少两项有具体行为证据 |
-| L5 | ≥1500 | ≥60 | 且 D5/B5/O5 至少一项有不可否认的证据 |
+### Data Gates（硬门槛，违反直接封顶，无例外）
 
-**门槛是必要条件，不是充分条件。** 500 条消息不代表 L4，但 183 条消息绝对不可能 L4。
+| 最高可得 | 消息数 | 天数 | 额外硬条件 |
+|---------|--------|------|-----------|
+| L1 | <50 | <7 | 试用阶段 |
+| L2 | <500 | <30 | **大多数用户的正确评级** |
+| L3 | ≥500 | ≥30 | 且 D/B/O 至少一项有可引用的具体证据 |
+| L4 | ≥1000 | ≥45 | 且 D/B/O 至少两项 ≥4，每项都有可引用的不同证据 |
+| L5 | ≥3000 | ≥90 | 且 D5/B5/O5 至少一项有不可否认的证据 |
 
-### Depth (D1-D5) — How deep in their primary domain
+**这是死规则，不是参考。** 999 条消息 = 最高 L3。不管 D/B/O 打多高，Data Gates 一票否决。
 
-| Code | Behavior | ❌ 不算 |
-|------|----------|---------|
-| D1 | Follows defaults, rarely questions | |
-| D2 | Chooses between options with reasons | 写配置文件（SOUL.md/设定）= D2 不是 D4 |
-| D3 | Makes architecture/system decisions | "拆成三个模块" = D3 |
-| D4 | **Corrects AI's professional judgment with domain expertise** — AI 给了一个专业方案，owner 指出具体错误并给出正确答案 | "从零写了X" 不是纠正 AI，是自己做事 |
-| D5 | Creates patterns AI doesn't know — teaches AI genuinely new concepts/methods | |
+### Depth (D1-D5) — 在主要领域的专业深度
 
-### Breadth (B1-B5) — How many domains they cross
+| Code | 必须满足 | ❌ 常见膨胀 |
+|------|---------|-----------|
+| D1 | 只会下指令，不质疑 AI 的输出 | |
+| D2 | 能在选项间做选择并说出理由 | 写配置/设定文件 = D2。"从零写了X" = D2（自己做事不是纠正 AI） |
+| D3 | 做架构级决策，拆解复杂系统 | 前提：至少有 3 次以上这种决策记录 |
+| D4 | **AI 给出专业方案，owner 指出具体技术错误并给出正确答案** | "不对重来" = D2（没指出原因）。"这里应该用 X 因为 Y" = D4 |
+| D5 | 教 AI 它不知道的概念/方法，且 AI 之后学会了 | 极罕见。需要明确的"教→学→应用"证据链 |
 
-| Code | Behavior | ❌ 不算 |
-|------|----------|---------|
-| B1 | Single domain, single tool | |
-| B2 | Single domain, multiple tools/features | 同一产品的不同功能（飞书+图片+搜索）= B2 |
-| B3 | 2-3 **genuinely different** domains with cross-domain reasoning | 领域必须是独立的（编程 vs 设计 vs 运营），不是同一产品的不同模块 |
-| B4 | 4+ domains with **integrated thinking** — decisions in domain A explicitly reference constraints in domain B | "横跨多个领域"不够，要有"因为前端需要X所以后端要Y"的跨域推理 |
-| B5 | Cross-domain transfer — applies methods from domain A to domain B | |
+**D3+ 的证据要求：** 必须能引用至少 2 条具体的对话场景。不能用"他做了很多架构决策"一笔带过。
 
-### Orchestration (O1-O5) — How they drive AI
+### Breadth (B1-B5) — 跨领域的广度
 
-| Code | Behavior | ❌ 不算 |
-|------|----------|---------|
-| O1 | Single-turn Q&A, accepts first answer | |
-| O2 | Multi-turn refinement, asks follow-ups, questions with "?" | 发问号/催促/要求解释 = O2，不是 O4 |
-| O3 | Gives AI strategic direction ("先做X再做Y") | |
-| O4 | **Systematic** project management — assigns parallel tasks, reviews deliverables against criteria, overrides with reasoning | 偶尔否定 AI ≠ O4。O4 是持续的管理模式 |
-| O5 | Designs reusable AI workflows — prompt templates, multi-agent orchestration, AI collaboration systems | 必须是可复用的系统设计，不是一次性指令 |
+| Code | 必须满足 | ❌ 常见膨胀 |
+|------|---------|-----------|
+| B1 | 只在一个领域用一种方式 | |
+| B2 | 一个领域内用多种工具/方法 | 同一产品的不同功能 = B2（飞书+图片+搜索+权限 = 还是飞书） |
+| B3 | 2-3 个**真正独立的领域**，有跨域推理 | 领域必须独立：编程 vs 设计 vs 运营 vs 产品。不是"前端和后端"（都是编程） |
+| B4 | 4+ 个独立领域，且有**域间整合思维** | 需要"因为 A 领域的约束，所以 B 领域必须这样做"的推理。"做了4件事"≠ B4 |
+| B5 | 把 A 领域的方法论迁移到 B 领域 | 极罕见 |
+
+**B3+ 的领域计数规则：** 前端+后端 = 1 个领域（编程）。飞书+Notion = 1 个领域（工具使用）。设计+编程 = 2 个领域。产品+设计+编程+运营 = 4 个领域。
+
+### Orchestration (O1-O5) — 驾驭 AI 的方式
+
+| Code | 必须满足 | ❌ 常见膨胀 |
+|------|---------|-----------|
+| O1 | 单轮问答，接受第一个答案 | |
+| O2 | 多轮追问/否定/修正 | 发"？"催促 = O2。说"不对" = O2。要求解释 = O2 |
+| O3 | 给 AI 战略方向，规划执行顺序 | "先做X再做Y" = O3 |
+| O4 | **持续的系统化管理**：分配并行任务+按标准审核+基于原因推翻决策 | 偶尔否定 ≠ O4。必须是**贯穿对话的管理模式**，不是偶发行为 |
+| O5 | 设计可复用的 AI 工作流系统 | prompt 模板、多 agent 编排、自动化管道。一次性指令 ≠ O5 |
+
+**O3+ 的频率要求：** O3 行为必须在对话中反复出现（≥5 次），不是偶尔一次。O4 必须是主要的交互模式，不是例外。
 
 ### Level Calculation
 
-**Level = round(mean(D, B, O))**，但受 Data Gates 封顶。
+**Level = round(mean(D, B, O))**，但受 Data Gates 一票否决。
 Specialist flag: if max - min >= 2, note the strong dimension.
 Level labels: L1 虾苗, L2 小钳, L3 红壳, L4 巨钳, L5 虾皇.
 
-### Anti-Inflation Checklist
+### 定级验证（必须通过，否则降级）
 
-给 D/B/O 打分前，对每一项问自己：
-1. **"我能引用一条具体的对话记录吗？"** — 不能就降一级
-2. **"换一个普通用户，同样的操作他能不能做到？"** — 能就不是高分
-3. **"我是不是在把'用了多个功能'当成'跨领域'？"** — 同一产品的多功能 = B2，不是 B4
-4. **"我是不是在把'否定了 AI'当成'纠正了 AI 的专业判断'？"** — 说"不对重来" = O2，指出具体错误原因 = D4
-5. **183 条消息的 claw 和 1500 条消息的 claw 能同级吗？** — 不能。数据量差异必须体现在评级里
+打完 D/B/O 分后，逐条验证：
+
+1. **Data Gate 检查** — 消息数和天数是否满足目标等级的门槛？不满足 = 直接封顶到门槛允许的最高级
+2. **证据检查** — 每个 ≥3 的维度，我能写出具体的对话场景吗？不能 = 该维度降到 2
+3. **普通人测试** — 换一个会用 AI 的普通人，同样的操作他能做到吗？能 = 不是高分
+4. **膨胀检查** — 我是不是在把下列行为拔高？
+   - "用了多功能" → B4（实际 B2）
+   - "否定了 AI" → O4（实际 O2）
+   - "写了配置" → D4（实际 D2）
+   - "做了很多事" → 高分（实际只说明了勤奋）
+5. **区分度检查** — 如果这个 claw 和另一个 claw 数据量差 5 倍以上，它们的 level 一样吗？一样 = 评级失败，必须拉开差距
+6. **最终确认** — **L3 是活跃用户的正常水平。L4 是精英。L5 极罕见。** 如果你给了 L4+，重新检查一遍所有证据
 
 ---
 
