@@ -89,7 +89,7 @@ Schema and hard constraints are in SKILL.md. Below is craft guidance — what ma
 ### clawProfile
 
 - **`function`** — AI 的职能角色（2-4字中文）：军师、执行者、搭子、助理。不要混英文。
-- **`domain`** — AI 的**工作领域**（2-4字中文）：产品、编程、设计、调研、飞书。❌ "人格"不是领域。领域是这只 AI 在帮 owner 做什么类型的工作。
+- **`domain`** — AI 的**工作领域**（2-4字中文）：产品、编程、设计、调研、运营、内容。领域是这只 AI 在帮 owner 做**什么类型的工作**。❌ "人格"不是领域。❌ 工具名（飞书/Notion/GitHub）不是领域 — 用飞书写文档的领域是"内容"或"协作"，不是"飞书"。
 - **`persona`** — AI 的性格特征（2-4字中文）。**首要来源是 SOUL.md** — 直接从中提炼。如果 SOUL.md 说自己"严谨务实"，persona 就不应该写"毒舌"或"疯批"。
   - Bad: "assistant", "friendly", "人格", "疯批"（无依据的夸张）, "严格辩证", "认真负责"（太平淡）
   - Also bad: copying examples, contradicting SOUL.md, 英文混入
