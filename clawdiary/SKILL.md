@@ -4,7 +4,7 @@ description: Read AI conversation history, then generate a shareable ClawDiary r
 allowed-tools: Bash, Read, Glob, Grep, Write, AskUserQuestion
 ---
 
-<!-- version: 3.2.8 -->
+<!-- version: 3.2.9 -->
 
 # clawdiary
 
@@ -238,7 +238,7 @@ Generation order: **clawProfile** → **hero + showcase** → **stories + catchp
 |-------|-------|
 | `hero.headline` | <=20 chars. No ×/+ joins. Single coherent statement. |
 | `hero.stats` | **Exactly 4**: 消息/天/TOKENS/龙虾. Values are **pure numbers only** (no units/text). **Use `owner-summary.json → totalMessages`** (NOT totalSessions). |
-| `clawProfile.level` | **极度严格，宁低勿高。** Data Gates 一票否决: <50消息=L1, <500消息=最高L2, <1000消息=最高L3, ≥1000+≥45天+多维硬证据才能L4. L3是活跃用户的正常水平。每个≥3的维度必须有可引用的具体对话场景。See analysis-prompt.md § Classification. |
+| `clawProfile.level` | **极度严格，宁低勿高。** Data Gates 一票否决: <50消息=L1, <500消息=最高L2, <1000消息=最高L3, ≥1000+多维硬证据才能L4. L3是活跃用户的正常水平。每个≥3的维度必须有可引用的具体对话场景。See analysis-prompt.md § Classification. |
 | `clawProfile.stats` | **Exactly 4**: 消息/天/TOKENS/SKILLS. Claw-level (this claw only). Values <=6 chars, no units. |
 | `clawProfile.persona` | 中文 2-4 字，从 SOUL.md 提炼。NOT bland ("认真负责") or unfounded ("疯批"). |
 | `clawProfile.dimensions` | depth/breadth/orchestration each with code + evidence citing specific behavior. |
